@@ -9,6 +9,7 @@ var cell_size := 16
 var _map_size := Vector2i(1312, 816)
 var _cover_image: Image = null
 var _cover_positions: Dictionary = {}
+var _free_cells: Array[Vector2i] = []
 
 
 func _ready() -> void:
@@ -22,7 +23,10 @@ func _ready() -> void:
 	_load_cover_map()
 	_build_grid()
 	if _cover_image != null:
-		print("NavManager: walkability from cover map; positions=", _cover_positions)
+		print(
+			"NavManager: walkability from cover map; walkable cells=", _free_cells.size(),
+			"; positions=", _cover_positions
+		)
 
 
 func _load_json(path: String) -> Dictionary:
@@ -68,6 +72,7 @@ func _build_grid() -> void:
 			if not _is_walkable(world):
 				grid.set_point_solid(Vector2i(x, y), true)
 	_carve_paths()
+	_collect_largest_component()
 
 
 func _is_walkable(world: Vector2) -> bool:
@@ -128,6 +133,7 @@ func _cover_cell_walkable(world: Vector2) -> bool:
 	var stride := w * 3
 	var cell_x := int(floor(world.x / cell_size)) * cell_size
 	var cell_y := int(floor(world.y / cell_size)) * cell_size
+	var matches := 0
 	for sy in [2, 6, 10, 14]:
 		for sx in [2, 6, 10, 14]:
 			var px: int = cell_x + sx
@@ -143,8 +149,49 @@ func _cover_cell_walkable(world: Vector2) -> bool:
 					if _color_close(
 						pr, pg, pb, int(color[0]), int(color[1]), int(color[2]), tol
 					):
-						return true
-	return false
+						matches += 1
+						break
+	return matches >= 2
+
+
+func _collect_largest_component() -> void:
+	var width := _map_size.x / cell_size
+	var height := _map_size.y / cell_size
+	var visited := PackedByteArray()
+	visited.resize(width * height)
+	var best: Array[Vector2i] = []
+	for y in height:
+		for x in width:
+			var flat := y * width + x
+			if visited[flat] == 1 or grid.is_point_solid(Vector2i(x, y)):
+				continue
+			visited[flat] = 1
+			var stack: Array[Vector2i] = [Vector2i(x, y)]
+			var comp: Array[Vector2i] = []
+			while not stack.is_empty():
+				var c: Vector2i = stack.pop_back()
+				comp.append(c)
+				for n in _cell_neighbors(c, width, height):
+					var nflat := n.y * width + n.x
+					if visited[nflat] == 0 and not grid.is_point_solid(n):
+						visited[nflat] = 1
+						stack.append(n)
+			if comp.size() > best.size():
+				best = comp
+	_free_cells = best
+
+
+func _cell_neighbors(cell: Vector2i, w: int, h: int) -> Array[Vector2i]:
+	var out: Array[Vector2i] = []
+	if cell.x > 0:
+		out.append(cell + Vector2i(-1, 0))
+	if cell.x < w - 1:
+		out.append(cell + Vector2i(1, 0))
+	if cell.y > 0:
+		out.append(cell + Vector2i(0, -1))
+	if cell.y < h - 1:
+		out.append(cell + Vector2i(0, 1))
+	return out
 
 
 func _color_close(pr: int, pg: int, pb: int, tr: int, tg: int, tb: int, tol: int) -> bool:
@@ -261,6 +308,8 @@ func _clear_solid_radius(cell: Vector2i, radius: int) -> void:
 
 
 func get_random_walkable_position(rng: RandomNumberGenerator) -> Vector2:
+	if _free_cells.size() > 0:
+		return grid.get_point_position(_free_cells[rng.randi_range(0, _free_cells.size() - 1)])
 	var areas: Array = locations.get("random_walk_areas", [])
 	for _attempt in 40:
 		var area = null
@@ -340,3 +389,7 @@ func find_path(from: Vector2, to: Vector2) -> PackedVector2Array:
 		same.append(grid.get_point_position(to_cell))
 		return same
 	return grid.get_point_path(from_cell, to_cell)
+
+
+func is_position_walkable(pos: Vector2) -> bool:
+	return _is_walkable(pos)

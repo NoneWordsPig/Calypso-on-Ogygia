@@ -49,10 +49,11 @@ func _apply_display_scaling() -> void:
 
 	## Character and computer overlay scale relative to the map.
 	var road_width := float(Config.get_value("display", "road_width", 14.0))
+	var scale_multiplier := float(Config.get_value("display", "character_scale_multiplier", 1.0))
 	var char_width: float = calypso.get_visual_width()
 	var char_scale := 0.1
 	if char_width > 0.0:
-		char_scale = road_width / char_width
+		char_scale = road_width / char_width * scale_multiplier
 	calypso.scale = Vector2(char_scale, char_scale)
 
 	var computer_scale := float(Config.get_value("display", "computer_scale", 0.0))

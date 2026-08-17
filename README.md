@@ -16,6 +16,7 @@ Godot 4.x 2D 桌面桌宠（第一阶段）。
 - 角色自动缩放到与道路等宽（道路宽度在 `data/config.json` 的 `display.road_width` 中调整）。
 - 角色动画帧从 `pictures/Calypso/*.png` 自动检测（无需硬编码帧数/尺寸），nearest-neighbor 渲染。
 - 地图关键位置与可行走区域在 `data/locations.json`，改配置即可。
+- 可行走区域由 `pictures/map/map_cover.jpg` 覆盖图驱动（图例：青=道路/可通行、绿=田地、红=电脑桌、品红=床、橙=火堆、灰=礁石/钓鱼点、黑=不可通行），颜色在 `data/config.json` 的 `navigation.cover_colors` 中配置；电脑/床/钓鱼/火堆位置也自动从该图取色块中心。
 - 游戏倍率等设置（默认 1 游戏小时 = 30 秒现实时间）在 `data/config.json`。
 - 21:00 Calypso 自动回床睡觉，06:00 起床继续活动。
 - WORKING / FISHING 状态已留好接口（`BehaviorManager.request_work()` / `request_fishing()`），等待后续 Hermes 接入。

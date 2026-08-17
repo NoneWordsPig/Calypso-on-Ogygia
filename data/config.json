@@ -2,6 +2,7 @@
   "_note": "Runtime settings. World coordinates are map pixel coordinates.",
   "resources": {
     "map": "res://pictures/map/map.png",
+    "map_cover": "res://pictures/map/map_cover.jpg",
     "character_dir": "res://pictures/Calypso",
     "computer": "res://pictures/object/computer.png"
   },
@@ -12,14 +13,25 @@
     "active_end_hour": 21.0
   },
   "movement": {
-    "speed": 90.0,
+    "speed": 67.5,
     "arrive_radius": 12.0,
     "walk_fps": 8.0,
     "idle_fps": 4.0,
     "sleep_fps": 2.0
   },
   "navigation": {
-    "cell_size": 16
+    "cell_size": 16,
+    "color_tolerance": 30,
+    "cover_colors": {
+      "walkable": [
+        [124, 255, 255],
+        [0, 255, 0]
+      ],
+      "computer": [255, 0, 0],
+      "bed": [255, 0, 255],
+      "fishing": [102, 102, 102],
+      "campfire": [255, 153, 0]
+    }
   },
   "behavior": {
     "walk_interval_range": [6.0, 15.0],
@@ -33,6 +45,7 @@
     "fullscreen": true,
     "map_mode": "cover",
     "road_width": 14.0,
-    "computer_scale": 0.0
+    "computer_scale": 0.0,
+    "character_scale_multiplier": 2.0
   }
 }

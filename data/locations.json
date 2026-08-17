@@ -3,19 +3,23 @@
     1312,
     816
   ],
-  "_note": "World coordinates are map pixel coordinates. Initial positions derived from the dev-map reference grid (40x45): computer (20,15), bed (35,28), fishing (22,40). Edit freely; navigation is area-based.",
+  "_note": "World coordinates are map pixel coordinates. Navigation/walkability now comes from map_cover.jpg (see config.json navigation.cover_colors); positions are auto-derived from its colored regions. Values here are fallbacks/overrides.",
   "positions": {
     "computer": [
-      656,
-      272
+      574,
+      263
     ],
     "bed": [
-      1148,
-      507
+      1074,
+      513
     ],
     "fishing": [
-      723,
-      723
+      433,
+      644
+    ],
+    "campfire": [
+      1073,
+      236
     ]
   },
   "spawn": [

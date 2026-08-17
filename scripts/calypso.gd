@@ -21,6 +21,7 @@ var facing: Facing = Facing.DOWN
 var _moving: bool = false
 var _path: PackedVector2Array = PackedVector2Array()
 var _path_index: int = 0
+var _visual_width: float = 0.0
 
 
 func _ready() -> void:
@@ -89,6 +90,10 @@ func wake_up() -> void:
 func play_typing() -> void:
 	stop()
 	sprite.play("typing")
+
+
+func get_visual_width() -> float:
+	return _visual_width
 
 
 func _finish_walk() -> void:
@@ -175,6 +180,14 @@ func _build_sprite_frames() -> void:
 		for rect in rects:
 			max_cell_h = maxi(max_cell_h, rect.size.y)
 
+	# Standing width only comes from the walk sheets; the sleep sheet is
+	# a wide lying pose and must not be used as the character's width.
+	_visual_width = 0.0
+	for anim in ["walk_down", "walk_up", "walk_left", "walk_right"]:
+		if infos.has(anim):
+			for rect in infos[anim]["frames"]:
+				_visual_width = maxf(_visual_width, float(rect.size.x))
+
 	var frames := SpriteFrames.new()
 	for anim in infos:
 		var info: Dictionary = infos[anim]
@@ -187,4 +200,3 @@ func _build_sprite_frames() -> void:
 
 	sprite.sprite_frames = frames
 	sprite.offset = Vector2(0.0, -float(max_cell_h) / 2.0)
-

@@ -24,11 +24,13 @@ NavManager="*res://scripts/navigation_manager.gd"
 
 window/size/viewport_width=1312
 window/size/viewport_height=816
-window/size/resizable=false
+window/size/mode=3
+window/stretch/mode="canvas_items"
+window/stretch/aspect="keep"
 
 [rendering]
 
 renderer/rendering_method="gl_compatibility"
 renderer/rendering_method.mobile="gl_compatibility"
 textures/canvas_textures/default_texture_filter=0
-
+environment/defaults/default_clear_color=Color(0.04, 0.07, 0.12, 1)

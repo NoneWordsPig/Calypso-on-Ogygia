@@ -28,5 +28,10 @@
   },
   "computer": {
     "offset": [0, 0]
+  },
+  "display": {
+    "fullscreen": true,
+    "road_width": 14.0,
+    "computer_scale": 0.0
   }
 }

@@ -31,6 +31,7 @@
   },
   "display": {
     "fullscreen": true,
+    "map_mode": "cover",
     "road_width": 14.0,
     "computer_scale": 0.0
   }

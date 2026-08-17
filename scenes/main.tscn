@@ -1,0 +1,23 @@
+[gd_scene load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://scripts/main.gd" id="1_main"]
+[ext_resource type="Texture2D" path="res://pictures/map/map.png" id="2_map"]
+[ext_resource type="PackedScene" path="res://scenes/calypso.tscn" id="3_calypso"]
+[ext_resource type="PackedScene" path="res://scenes/computer.tscn" id="4_computer"]
+[ext_resource type="Script" path="res://scripts/behavior_manager.gd" id="5_behavior"]
+
+[node name="Main" type="Node2D"]
+script = ExtResource("1_main")
+
+[node name="Map" type="Sprite2D" parent="."]
+texture = ExtResource("2_map")
+
+[node name="Computer" parent="." instance=ExtResource("4_computer")]
+z_index = 5
+
+[node name="Calypso" parent="." instance=ExtResource("3_calypso")]
+z_index = 10
+
+[node name="BehaviorManager" type="Node" parent="."]
+script = ExtResource("5_behavior")
+

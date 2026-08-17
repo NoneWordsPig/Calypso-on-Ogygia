@@ -1,0 +1,32 @@
+{
+  "_note": "Runtime settings. World coordinates are map pixel coordinates.",
+  "resources": {
+    "map": "res://pictures/map/map.png",
+    "character_dir": "res://pictures/Calypso",
+    "computer": "res://pictures/object/computer.png"
+  },
+  "time": {
+    "real_seconds_per_game_hour": 30.0,
+    "start_hour": 8.0,
+    "active_start_hour": 6.0,
+    "active_end_hour": 21.0
+  },
+  "movement": {
+    "speed": 90.0,
+    "arrive_radius": 12.0,
+    "walk_fps": 8.0,
+    "idle_fps": 4.0,
+    "sleep_fps": 2.0
+  },
+  "navigation": {
+    "cell_size": 16
+  },
+  "behavior": {
+    "walk_interval_range": [6.0, 15.0],
+    "bed_arrive_radius": 30.0,
+    "stub_work_seconds": 2.0
+  },
+  "computer": {
+    "offset": [0, 0]
+  }
+}

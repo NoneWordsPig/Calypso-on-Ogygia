@@ -39,13 +39,17 @@
     "stub_work_seconds": 2.0
   },
   "computer": {
-    "offset": [0, 0]
+    "offset": [0, 0],
+    "interaction": {
+      "position": [-40, 0],
+      "facing": "left"
+    }
   },
   "display": {
     "fullscreen": false,
     "map_mode": "cover",
     "road_width": 14.0,
-    "computer_scale": 0.0,
+    "computer_scale": 0.8,
     "character_scale_multiplier": 2.0
   }
 }

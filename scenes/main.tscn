@@ -5,20 +5,31 @@
 [ext_resource type="PackedScene" path="res://scenes/calypso.tscn" id="3_calypso"]
 [ext_resource type="PackedScene" path="res://scenes/computer.tscn" id="4_computer"]
 [ext_resource type="Script" path="res://scripts/behavior_manager.gd" id="5_behavior"]
+[ext_resource type="Script" path="res://scripts/debug_controls.gd" id="6_debug"]
 
 [node name="Main" type="Node2D"]
 script = ExtResource("1_main")
 
 [node name="World" type="Node2D" parent="."]
+position = Vector2(656, 408)
 
 [node name="Map" type="Sprite2D" parent="World"]
 texture = ExtResource("2_map")
+position = Vector2(-656, -408)
 
-[node name="Computer" parent="World" instance=ExtResource("4_computer")]
-z_index = 5
+[node name="Navigation" type="Node2D" parent="World"]
+
+[node name="Objects" type="Node2D" parent="World"]
 
 [node name="Calypso" parent="World" instance=ExtResource("3_calypso")]
-z_index = 10
+
+[node name="Computer" parent="World/Objects" instance=ExtResource("4_computer")]
+z_index = 5
+add_to_group("computer")
 
 [node name="BehaviorManager" type="Node" parent="."]
 script = ExtResource("5_behavior")
+add_to_group("behavior_manager")
+
+[node name="DebugControls" type="Node" parent="."]
+script = ExtResource("6_debug")

@@ -14,3 +14,8 @@ script = ExtResource("1_calypso")
 position = Vector2(0, 18)
 shape = SubResource("RectangleShape2D_body")
 
+[node name="Camera2D" type="Camera2D" parent="."]
+current = true
+enabled = true
+position = Vector2(0, -20)
+zoom = Vector2(1, 1)

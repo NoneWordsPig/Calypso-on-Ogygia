@@ -171,10 +171,7 @@ func _build_sprite_frames() -> void:
 		if tex == null:
 			push_error("Calypso: cannot load " + animations[anim])
 			continue
-		var opts := {}
-		if anim == "sleep":
-			opts["split"] = 2
-		var info := SpriteSheetUtils.detect_frames(tex, opts)
+		var info := SpriteSheetUtils.detect_frames(tex)
 		infos[anim] = info
 		var rects: Array = info["frames"]
 		for rect in rects:
@@ -200,3 +197,7 @@ func _build_sprite_frames() -> void:
 
 	sprite.sprite_frames = frames
 	sprite.offset = Vector2(0.0, -float(max_cell_h) / 2.0)
+	var summary := []
+	for anim in infos:
+		summary.append("%s=%d" % [anim, infos[anim]["frames"].size()])
+	print("Calypso sprite frames: ", " ".join(summary))

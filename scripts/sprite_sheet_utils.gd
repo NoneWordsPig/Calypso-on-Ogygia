@@ -35,20 +35,24 @@ static func detect_frames(texture: Texture2D, opts: Dictionary = {}) -> Dictiona
 
 	var frames: Array[Rect2i] = []
 	if runs.size() >= 2:
+		# Sheets with fully transparent gutters: one frame per content run.
 		for run in runs:
 			frames.append(_tight_rect(img, run.x, run.y))
+	elif runs.size() == 1:
+		# A single contiguous content block with no transparent separator
+		# is one frame (e.g. the wide lying sleep pose), not a packed grid.
+		frames.append(_tight_rect(img, runs[0].x, runs[0].y))
 	else:
-		# Fallback for sheets without fully transparent gutters (e.g. sleep).
-		var split := int(opts.get("split", 2))
-		var x0 := 0
-		var x1 := w - 1
-		if runs.size() == 1:
-			x0 = runs[0].x
-			x1 = runs[0].y
-		var span := int(floor(float(x1 - x0 + 1) / split))
+		# No detectable alpha gaps at all: the whole sheet is one frame,
+		# unless the caller explicitly requests splitting a tightly packed
+		# sheet into `split` equal columns.
+		var split := maxi(1, int(opts.get("split", 1)))
+		var span := int(floor(float(w) / split))
 		for i in split:
-			var rx0 := x0 + i * span
-			var rx1 := x0 + (i + 1) * span - 1
+			var rx0 := i * span
+			var rx1 := i * span + span - 1
+			if i == split - 1:
+				rx1 = w - 1
 			frames.append(_tight_rect(img, rx0, rx1))
 	return {"frames": frames, "image": img}
 
@@ -85,8 +89,7 @@ static func _tight_rect(img: Image, x0: int, x1: int) -> Rect2i:
 		for y in h:
 			if data[y * stride + x * 4 + 3] > 0:
 				min_y = mini(min_y, y)
-				max_y = y
+				max_y = maxi(max_y, y)
 	if max_y < 0:
 		return Rect2i(x0, 0, x1 - x0 + 1, 1)
 	return Rect2i(x0, min_y, x1 - x0 + 1, max_y - min_y + 1)
-

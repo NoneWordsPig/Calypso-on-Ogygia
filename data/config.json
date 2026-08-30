@@ -1,0 +1,94 @@
+{
+  "_note": "Calypso's Ogygia 运行时配置。世界坐标 = 地图像素坐标（地图 1312x816）。",
+  "resources": {
+    "map": "assets/map/map.png",
+    "map_cover": "assets/map/map_cover.jpg",
+    "spritesheet": "assets/sprites/keeper.webp",
+    "spritesheet_layout": {
+      "columns": 8,
+      "rows": 9,
+      "frame_width": 192,
+      "frame_height": 208,
+      "states": [
+        { "name": "idle", "row": 0, "frames": 6 },
+        { "name": "running-right", "row": 1, "frames": 8 },
+        { "name": "running-left", "row": 2, "frames": 8 },
+        { "name": "waving", "row": 3, "frames": 4 },
+        { "name": "jumping", "row": 4, "frames": 5 },
+        { "name": "failed", "row": 5, "frames": 8 },
+        { "name": "waiting", "row": 6, "frames": 6 },
+        { "name": "running", "row": 7, "frames": 6 },
+        { "name": "review", "row": 8, "frames": 6 }
+      ]
+    },
+    "computer": "assets/object/computer.png",
+    "navigation": "data/navigation.json"
+  },
+  "display": {
+    "window_mode": "map",
+    "fit_height_ratio": 0.82,
+    "start_position": "bottom_right",
+    "show_hud": true,
+    "road_width": 14.0,
+    "character_scale_multiplier": 2.0,
+    "computer_scale": 0.22,
+    "nearest_filter": true
+  },
+  "time": {
+    "real_seconds_per_game_hour": 30.0,
+    "start_hour": 8.0,
+    "active_start_hour": 6.0,
+    "active_end_hour": 21.0
+  },
+  "movement": {
+    "speed": 67.5,
+    "arrive_radius": 12.0,
+    "fps": {
+      "idle": 4.0,
+      "walk": 8.0,
+      "work": 6.0,
+      "celebrate": 8.0,
+      "sleep": 1.0,
+      "waiting": 4.0,
+      "review": 4.0,
+      "failed": 6.0
+    }
+  },
+  "behavior": {
+    "walk_interval_range": [6.0, 15.0],
+    "celebrate_seconds": 6.0,
+    "failed_seconds": 4.0,
+    "stub_work_seconds": 2.0,
+    "priorities": {
+      "WORKING": 6,
+      "CELEBRATING": 5,
+      "WAITING": 5,
+      "REVIEW": 4,
+      "FAILED": 4,
+      "SLEEPING": 3,
+      "WALKING": 2,
+      "IDLE": 1
+    }
+  },
+  "computer": {
+    "offset": [0, 0],
+    "interaction": { "position": [-40, 0], "facing": "left" }
+  },
+  "hermes": {
+    "poll_interval_seconds": 1.0,
+    "provider": "mock",
+    "http_url": "http://127.0.0.1:17787/api/pet/attention"
+  },
+  "mock_hermes": {
+    "loop": [
+      { "status": "idle", "seconds": 8 },
+      { "status": "working", "seconds": 10 },
+      { "status": "success", "seconds": 5 },
+      { "status": "idle", "seconds": 6 },
+      { "status": "action_required", "seconds": 6 },
+      { "status": "working", "seconds": 8 },
+      { "status": "success", "seconds": 4 },
+      { "status": "idle", "seconds": 10 }
+    ]
+  }
+}

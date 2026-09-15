@@ -155,7 +155,9 @@ class Navigation:
             else:
                 i += 1  # no shortcut available; advance one cell
         if self._dist(out[-1], goal) > arrive_radius:
-            out.append(goal)
+            end = goal if self.is_walkable(goal) else (self.nearest_walkable(goal) or goal)
+            if self._dist(out[-1], end) > 1.0:
+                out.append(end)
         return out
 
     def _line_of_sight(self, a: tuple[float, float], b: tuple[float, float]) -> bool:

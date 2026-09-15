@@ -1,11 +1,15 @@
-"""Build data/navigation.json from the map's road network (map-bound paths).
+"""Build data/navigation.json from the COVER map (map_cover.jpg, the 色罩版).
 
-The walkable grid is derived from the warm-toned road pixels in assets/map/map.png,
-matching the "map-bound paths" used by the 废稿 (draft). All named POIs from
-data/locations.json must be mutually reachable; the tool verifies this and exits
-non-zero otherwise.
+The cover map is the authoritative map binding: colored regions map to terrain
+features (compared against map.png). Walkable colors are derived from the
+actual cover palette and Godot's documented intent (青色道路/绿色田地可走):
 
-Runtime deps: numpy + scipy (only needed to rebuild navigation.json).
+  walkable: cyan(road), green(bed/field), magenta, purple, blue(computer),
+            orange(campfire x2 tones)
+  not walkable: yellow(fields), dark/black(sea & land), white
+
+All named POIs from data/locations.json must be mutually reachable; the tool
+verifies this. Runtime deps: numpy + scipy (rebuild only).
 """
 from __future__ import annotations
 
@@ -16,34 +20,43 @@ from pathlib import Path
 
 import numpy as np
 from PIL import Image
-from scipy.ndimage import binary_dilation, label as ndlabel
+from scipy.ndimage import label as ndlabel
 
 ROOT = Path(__file__).resolve().parent.parent
-MAP_PATH = ROOT / "assets" / "map" / "map.png"
+COVER_PATH = ROOT / "assets" / "map" / "map_cover.jpg"
 LOCATIONS_PATH = ROOT / "data" / "locations.json"
 OUT_PATH = ROOT / "data" / "navigation.json"
 
 CELL_SIZE = 16
-HUE_MIN, HUE_MAX = 14.0, 60.0
-SAT_MIN, SAT_MAX = 0.08, 0.90
-VALUE_MIN = 0.15
-DILATION = 3
+COLOR_TOLERANCE = 20
 CELL_FILL_RATIO = 0.20
 
+# Actual cover palette -> terrain (verified against map.png + POI centroids).
+WALKABLE_COLORS = [
+    (0, 248, 248),    # cyan   -> road network
+    (0, 248, 0),      # green  -> bed / field
+    (248, 0, 248),    # magenta
+    (248, 0, 240),    # magenta (light variant)
+    (144, 72, 184),   # purple
+    (2, 1, 255),      # blue   -> computer
+    (248, 208, 48),   # orange
+    (252, 146, 2),    # orange -> campfire
+]
+NON_WALKABLE_EXAMPLES = [
+    (248, 248, 0),    # yellow -> fields
+    (24, 24, 24),     # dark   -> sea / land
+    (0, 0, 0),        # black  -> sea
+]
 
-def _road_mask(arr_rgb: np.ndarray) -> np.ndarray:
-    arr = arr_rgb / 255.0
-    r, g, b = arr[:, :, 0], arr[:, :, 1], arr[:, :, 2]
-    mx = arr.max(axis=2)
-    mn = arr.min(axis=2)
-    den = np.where(mx - mn == 0, 1.0, mx - mn)
-    hue = np.where(mx == r, (60.0 * ((g - b) / den)) % 360.0, 0.0)
-    hue = np.where(mx == g, 60.0 * ((b - r) / den) + 120.0, hue)
-    hue = np.where(mx == b, 60.0 * ((r - g) / den) + 240.0, hue)
-    sat = np.where(mx == 0, 0.0, (mx - mn) / np.where(mx == 0, 1.0, mx))
-    warm = (sat > SAT_MIN) & (sat < SAT_MAX) & (hue >= HUE_MIN) & (hue <= HUE_MAX) & (mx > VALUE_MIN)
-    sand = (r > 0.75) & (g > 0.60) & (b > 0.38) & (r - b > 0.15)
-    return binary_dilation(warm | sand, iterations=DILATION)
+
+def _color_mask(arr: np.ndarray, colors, tol: int) -> np.ndarray:
+    mask = np.zeros(arr.shape[:2], bool)
+    for t in colors:
+        m = np.ones(arr.shape[:2], bool)
+        for i in range(3):
+            m &= np.abs(arr[:, :, i] - t[i]) <= tol
+        mask |= m
+    return mask
 
 
 def _build_grid(mask: np.ndarray) -> np.ndarray:
@@ -57,7 +70,7 @@ def _build_grid(mask: np.ndarray) -> np.ndarray:
     return grid
 
 
-def _nearest_cell(grid: np.ndarray, point) -> tuple:
+def _nearest_cell(grid: np.ndarray, point) -> tuple | None:
     x, y = int(point[0]), int(point[1])
     rows, cols = grid.shape
     best, best_d = None, float("inf")
@@ -101,11 +114,11 @@ def _a_star(grid: np.ndarray, a: tuple, b: tuple):
 
 
 def main() -> int:
-    image = Image.open(MAP_PATH).convert("RGB")
+    image = Image.open(COVER_PATH).convert("RGB")
     arr = np.asarray(image).astype(np.int32)
     h, w = arr.shape[:2]
 
-    mask = _road_mask(arr)
+    mask = _color_mask(arr, WALKABLE_COLORS, COLOR_TOLERANCE)
     grid = _build_grid(mask)
     rows, cols = grid.shape
     free_cells = int(grid.sum())
@@ -122,7 +135,6 @@ def main() -> int:
             return 1
         cells[name] = {"world": [int(pt[0]), int(pt[1])], "cell": [int(cell[0]), int(cell[1])]}
 
-    # verify pairwise reachability
     names = list(cells)
     failures = []
     for i in range(len(names)):
@@ -138,12 +150,11 @@ def main() -> int:
     payload = {
         "map_size": [w, h],
         "cell_size": CELL_SIZE,
-        "source": str(MAP_PATH.relative_to(ROOT)).replace("\\", "/"),
+        "source": str(COVER_PATH.relative_to(ROOT)).replace("\\", "/"),
+        "source_kind": "cover",
         "params": {
-            "hue_range": [HUE_MIN, HUE_MAX],
-            "sat_range": [SAT_MIN, SAT_MAX],
-            "value_min": VALUE_MIN,
-            "dilation": DILATION,
+            "walkable_colors": WALKABLE_COLORS,
+            "color_tolerance": COLOR_TOLERANCE,
             "cell_fill_ratio": CELL_FILL_RATIO,
         },
         "grid_cols": cols,

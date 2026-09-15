@@ -1,5 +1,5 @@
 {
-  "_note": "Calypso's Ogygia 运行时配置。世界坐标 = 地图像素坐标（地图 1312x816）。",
+  "_note": "Calypso's Ogygia 运行时配置。世界坐标 = 地图像素坐标（地图 1312x816，作为桌面壁纸显示）。",
   "resources": {
     "map": "assets/map/map.png",
     "map_cover": "assets/map/map_cover.jpg",
@@ -25,14 +25,44 @@
     "navigation": "data/navigation.json"
   },
   "display": {
-    "window_mode": "map",
-    "fit_height_ratio": 0.82,
-    "start_position": "bottom_right",
-    "show_hud": true,
+    "window_mode": "desktop_overlay",
+    "click_through": true,
+    "draw_debug_map": false,
+    "show_shadow": true,
+    "show_status_bubble": false,
+    "wallpaper": {
+      "mode": "auto",
+      "scale": null,
+      "offset": [null, null],
+      "map_width": 1312,
+      "map_height": 816
+    },
+    "control_panel": {
+      "enabled": true,
+      "position": "top_right"
+    },
     "road_width": 14.0,
     "character_scale_multiplier": 2.0,
-    "computer_scale": 0.22,
-    "nearest_filter": true
+    "computer_scale": 0.12
+  },
+  "navigation": {
+    "cell_size": 16,
+    "source": "cover",
+    "cover_walkable_colors": [
+      [0, 248, 248],
+      [0, 248, 0],
+      [248, 0, 248],
+      [248, 0, 240],
+      [144, 72, 184],
+      [2, 1, 255],
+      [248, 208, 48],
+      [252, 146, 2]
+    ],
+    "cover_poi_colors": {
+      "computer": [2, 1, 255],
+      "bed": [0, 248, 0],
+      "campfire": [252, 146, 2]
+    }
   },
   "time": {
     "real_seconds_per_game_hour": 30.0,

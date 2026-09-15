@@ -27,8 +27,9 @@ class TestNavigation(unittest.TestCase):
                 b = self.nav.poi(POIS[j])
                 path = self.nav.find_path(a, b)
                 self.assertGreaterEqual(len(path), 2, f"{POIS[i]}->{POIS[j]}")
-                self.assertTrue(self.nav.is_walkable(path[0]))
-                self.assertTrue(self.nav.is_walkable(path[-1]))
+                self.assertTrue(self.nav.is_walkable(path[-1]), f"{POIS[i]}->{POIS[j]} end off-grid")
+                for pt in path[1:-1]:
+                    self.assertTrue(self.nav.is_walkable(pt), f"off-road point {pt}")
 
     def test_path_points_on_road(self):
         a = self.nav.poi("computer")

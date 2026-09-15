@@ -1,0 +1,410 @@
+{
+  "cell_size": [
+    164,
+    408
+  ],
+  "animations": {
+    "walk_down": {
+      "frames": [
+        "walk_down/00.png",
+        "walk_down/01.png",
+        "walk_down/02.png",
+        "walk_down/03.png"
+      ],
+      "count": 4,
+      "source_size": [
+        1312,
+        816
+      ],
+      "source_rects": [
+        [
+          132,
+          202,
+          288,
+          580
+        ],
+        [
+          429,
+          201,
+          602,
+          580
+        ],
+        [
+          723,
+          202,
+          907,
+          580
+        ],
+        [
+          1030,
+          201,
+          1185,
+          580
+        ]
+      ],
+      "canvas_size": [
+        184,
+        379
+      ],
+      "anchor": [
+        92,
+        379
+      ],
+      "anchor_type": "feet-center"
+    },
+    "walk_up": {
+      "frames": [
+        "walk_up/00.png",
+        "walk_up/01.png",
+        "walk_up/02.png",
+        "walk_up/03.png"
+      ],
+      "count": 4,
+      "source_size": [
+        1312,
+        816
+      ],
+      "source_rects": [
+        [
+          134,
+          201,
+          283,
+          580
+        ],
+        [
+          408,
+          202,
+          579,
+          580
+        ],
+        [
+          712,
+          202,
+          888,
+          580
+        ],
+        [
+          1024,
+          201,
+          1178,
+          580
+        ]
+      ],
+      "canvas_size": [
+        176,
+        379
+      ],
+      "anchor": [
+        88,
+        379
+      ],
+      "anchor_type": "feet-center"
+    },
+    "walk_left": {
+      "frames": [
+        "walk_left/00.png",
+        "walk_left/01.png",
+        "walk_left/02.png",
+        "walk_left/03.png"
+      ],
+      "count": 4,
+      "source_size": [
+        1312,
+        816
+      ],
+      "source_rects": [
+        [
+          112,
+          201,
+          274,
+          581
+        ],
+        [
+          404,
+          201,
+          586,
+          580
+        ],
+        [
+          756,
+          201,
+          904,
+          581
+        ],
+        [
+          1022,
+          201,
+          1182,
+          581
+        ]
+      ],
+      "canvas_size": [
+        182,
+        380
+      ],
+      "anchor": [
+        91,
+        380
+      ],
+      "anchor_type": "feet-center"
+    },
+    "walk_right": {
+      "frames": [
+        "walk_right/00.png",
+        "walk_right/01.png",
+        "walk_right/02.png",
+        "walk_right/03.png"
+      ],
+      "count": 4,
+      "source_size": [
+        1312,
+        816
+      ],
+      "source_rects": [
+        [
+          126,
+          201,
+          292,
+          579
+        ],
+        [
+          413,
+          202,
+          566,
+          580
+        ],
+        [
+          726,
+          201,
+          908,
+          579
+        ],
+        [
+          1028,
+          201,
+          1176,
+          580
+        ]
+      ],
+      "canvas_size": [
+        182,
+        379
+      ],
+      "anchor": [
+        91,
+        379
+      ],
+      "anchor_type": "feet-center"
+    },
+    "idle_down": {
+      "frames": [
+        "idle_down/00.png",
+        "idle_down/01.png",
+        "idle_down/02.png",
+        "idle_down/03.png"
+      ],
+      "count": 4,
+      "source_size": [
+        1312,
+        816
+      ],
+      "source_rects": [
+        [
+          77,
+          203,
+          336,
+          540
+        ],
+        [
+          381,
+          202,
+          638,
+          540
+        ],
+        [
+          682,
+          203,
+          936,
+          540
+        ],
+        [
+          976,
+          203,
+          1236,
+          540
+        ]
+      ],
+      "canvas_size": [
+        260,
+        338
+      ],
+      "anchor": [
+        130,
+        338
+      ],
+      "anchor_type": "feet-center"
+    },
+    "idle_up": {
+      "frames": [
+        "idle_up/00.png",
+        "idle_up/01.png",
+        "idle_up/02.png",
+        "idle_up/03.png"
+      ],
+      "count": 4,
+      "source_size": [
+        1312,
+        816
+      ],
+      "source_rects": [
+        [
+          78,
+          203,
+          336,
+          540
+        ],
+        [
+          381,
+          202,
+          638,
+          540
+        ],
+        [
+          682,
+          202,
+          935,
+          540
+        ],
+        [
+          977,
+          203,
+          1236,
+          540
+        ]
+      ],
+      "canvas_size": [
+        259,
+        338
+      ],
+      "anchor": [
+        129,
+        338
+      ],
+      "anchor_type": "feet-center"
+    },
+    "work": {
+      "frames": [
+        "work/00.png",
+        "work/01.png",
+        "work/02.png",
+        "work/03.png"
+      ],
+      "count": 4,
+      "source_size": [
+        1312,
+        816
+      ],
+      "source_rects": [
+        [
+          51,
+          235,
+          281,
+          614
+        ],
+        [
+          373,
+          235,
+          613,
+          614
+        ],
+        [
+          705,
+          235,
+          942,
+          614
+        ],
+        [
+          1020,
+          235,
+          1254,
+          613
+        ]
+      ],
+      "canvas_size": [
+        240,
+        379
+      ],
+      "anchor": [
+        120,
+        379
+      ],
+      "anchor_type": "feet-center"
+    },
+    "sleep": {
+      "frames": [
+        "sleep/00.png",
+        "sleep/01.png",
+        "sleep/02.png",
+        "sleep/03.png"
+      ],
+      "count": 4,
+      "source_size": [
+        1312,
+        816
+      ],
+      "source_rects": [
+        [
+          18,
+          242,
+          328,
+          533
+        ],
+        [
+          328,
+          242,
+          656,
+          533
+        ],
+        [
+          656,
+          242,
+          984,
+          533
+        ],
+        [
+          984,
+          242,
+          1294,
+          533
+        ]
+      ],
+      "canvas_size": [
+        328,
+        291
+      ],
+      "anchor": [
+        164,
+        291
+      ],
+      "anchor_type": "feet-center"
+    },
+    "idle_left": {
+      "alias": "walk_left",
+      "count": 4,
+      "anchor": [
+        82,
+        408
+      ],
+      "anchor_type": "feet-center"
+    },
+    "idle_right": {
+      "alias": "walk_right",
+      "count": 4,
+      "anchor": [
+        82,
+        408
+      ],
+      "anchor_type": "feet-center"
+    }
+  }
+}

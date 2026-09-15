@@ -2,3 +2,7 @@
 *.import
 参考/
 残稿/
+__pycache__/
+*.py[cod]
+*.egg-info/
+logs/*.log

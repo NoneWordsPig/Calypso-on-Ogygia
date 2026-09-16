@@ -6,3 +6,6 @@ __pycache__/
 *.py[cod]
 *.egg-info/
 logs/*.log
+logs/calypso.pid
+logs/calypso.stop
+logs/calypso.stop.ack

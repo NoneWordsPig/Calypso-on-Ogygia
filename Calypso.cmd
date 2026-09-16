@@ -2,3 +2,4 @@
 setlocal
 set "ROOT=%~dp0"
 powershell -NoProfile -ExecutionPolicy Bypass -File "%ROOT%scripts\calypso-toggle.ps1"
+if errorlevel 1 pause

@@ -26,11 +26,27 @@ if ($p) {
     }
     if (-not $p) {
       Remove-Item -LiteralPath $stop,$ack,$marker -Force -ErrorAction SilentlyContinue
+      Write-Output 'Calypso stopped.'
+      Start-Sleep -Seconds 2
     } else {
       Write-Warning 'Calypso did not acknowledge the stop request; no process was killed.'
+      exit 1
     }
 } else {
   Remove-Item -LiteralPath $stop,$ack,$marker -Force -ErrorAction SilentlyContinue
   $env:PYTHONPATH = Join-Path $root 'src'
-  Start-Process python -ArgumentList '-m calypso --desktop' -WorkingDirectory $root -WindowStyle Hidden | Out-Null
+  $started = Start-Process python -ArgumentList '-m calypso --desktop' -WorkingDirectory $root -WindowStyle Hidden -PassThru
+  $deadline=(Get-Date).AddSeconds(5)
+  do {
+    Start-Sleep -Milliseconds 200
+    $ready = Test-Path -LiteralPath $marker
+    $started.Refresh()
+  } while (-not $ready -and -not $started.HasExited -and (Get-Date) -lt $deadline)
+  if ($ready -and -not $started.HasExited) {
+    Write-Output 'Calypso started. Press Win+D to view the desktop.'
+    Start-Sleep -Seconds 2
+  } else {
+    Write-Warning "Calypso failed to start. Check logs\calypso.log."
+    exit 1
+  }
 }

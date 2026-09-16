@@ -77,18 +77,32 @@ def main(argv=None):
     computer_window = ComputerWindow(transform=transform, navigation=runtime.navigation, target_height=cfg.computer_height)
     computer_window.show()
     host = DesktopHost() if ns.desktop else None
-    if host:
-        attached = True
+    desktop_attach_attempts = 0
+
+    def try_attach_desktop():
+        nonlocal desktop_attach_attempts
+        if host is None:
+            return
+        desktop_attach_attempts += 1
+        host.cleanup()
+        error = None
         for child in (window, computer_window):
             try:
                 host.attach(int(child.winId()))
             except DesktopHostError as exc:
-                attached = False
-                logger.warning("desktop attach failed: %s", exc)
+                error = exc
                 break
-        logger.info("desktop attached %s", attached)
-        if not attached:
-            host.cleanup()
+        if error is None:
+            logger.info("desktop attached True (attempt %s)", desktop_attach_attempts)
+            return
+        host.cleanup()
+        if desktop_attach_attempts < 10:
+            QTimer.singleShot(500, try_attach_desktop)
+        else:
+            logger.warning("desktop attach failed after %s attempts: %s",
+                           desktop_attach_attempts, error)
+
+    try_attach_desktop()
     tray = None
     if QSystemTrayIcon.isSystemTrayAvailable():
         icon = PROJECT_ROOT / "assets" / "calypso" / "idle_down" / "00.png"
@@ -97,6 +111,8 @@ def main(argv=None):
         menu.addAction("Exit Calypso", app.quit)
         tray.setContextMenu(menu)
         tray.show()
+        tray.showMessage("Calypso", "已启动；按 Win+D 可查看桌面上的 Calypso。",
+                         QSystemTrayIcon.Information, 3000)
     timer = QTimer(app)
     last = time.perf_counter()
     ticks = 0

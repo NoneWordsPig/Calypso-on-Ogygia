@@ -1,6 +1,10 @@
 """Application entry point for the production PySide6 companion."""
 import argparse
+import atexit
+import json
 import logging
+import os
+import secrets
 import signal
 import sys
 import time
@@ -10,6 +14,7 @@ from .config import PROJECT_ROOT
 from .desktop.coordinate_mapper import ScreenTransform
 from .desktop.dpi import enable_per_monitor_v2
 from .character.animator import Animator
+from .config import load_config
 
 
 def main(argv=None):
@@ -23,6 +28,23 @@ def main(argv=None):
     enable_per_monitor_v2()
     logdir = PROJECT_ROOT / "logs"
     logdir.mkdir(parents=True, exist_ok=True)
+    pid_file = logdir / "calypso.pid"
+    stop_file = logdir / "calypso.stop"
+    ack_file = logdir / "calypso.stop.ack"
+    stop_file.unlink(missing_ok=True)
+    ack_file.unlink(missing_ok=True)
+    control_token = secrets.token_hex(16)
+    marker_payload = json.dumps({"pid": os.getpid(), "token": control_token})
+    pid_file.write_text(marker_payload, encoding="ascii")
+    def remove_control_files():
+        try:
+            if pid_file.exists() and pid_file.read_text(encoding="ascii").strip() == marker_payload:
+                pid_file.unlink(missing_ok=True)
+            stop_file.unlink(missing_ok=True)
+            ack_file.unlink(missing_ok=True)
+        except OSError:
+            pass
+    atexit.register(remove_control_files)
     logger = logging.getLogger("calypso")
     logger.setLevel(logging.INFO)
     if not logger.handlers:
@@ -41,17 +63,18 @@ def main(argv=None):
 
     logger.info("app start")
     app = QApplication([sys.argv[0]])
-    runtime = Runtime()
-    animator = Animator()
+    cfg = load_config()
+    runtime = Runtime(config=cfg)
+    animator = Animator(cfg.sprite_manifest)
     screen = app.primaryScreen()
     geo = screen.geometry()
     dpr = screen.devicePixelRatio()
     transform = ScreenTransform(actual_primary_physical=(round(geo.width() * dpr),
                                                          round(geo.height() * dpr)), dpi=dpr)
-    window = SpriteWindow(transform=transform, interactive=ns.debug_overlay)
+    window = SpriteWindow(transform=transform, interactive=ns.debug_overlay, target_height=cfg.character_height)
     window.setFocusPolicy(Qt.StrongFocus if ns.debug_overlay else Qt.NoFocus)
     window.show()
-    computer_window = ComputerWindow(transform=transform, navigation=runtime.navigation)
+    computer_window = ComputerWindow(transform=transform, navigation=runtime.navigation, target_height=cfg.computer_height)
     computer_window.show()
     host = DesktopHost() if ns.desktop else None
     if host:
@@ -86,10 +109,12 @@ def main(argv=None):
             return
         cleaned = True
         timer.stop()
+        stop_file.unlink(missing_ok=True)
         if tray is not None:
             tray.hide()
         if host is not None:
             host.cleanup()
+        runtime.close()
         window.close()
         computer_window.close()
         if not exit_logged:
@@ -116,6 +141,13 @@ def main(argv=None):
         dt = min(0.25, now - last)
         last = now
         try:
+            if stop_file.exists():
+                request_token = stop_file.read_text(encoding="ascii").strip()
+                if request_token == control_token:
+                    ack_file.write_text(control_token, encoding="ascii")
+                    app.quit()
+                    return
+                stop_file.unlink(missing_ok=True)
             runtime.tick(dt)
             value = getattr(getattr(runtime.behavior, "state", None), "value", "").lower()
             if value in ("working", "sleeping"):
@@ -126,7 +158,8 @@ def main(argv=None):
             animator.tick(dt, getattr(runtime.character, "running", False))
             path = animator.frame_path()
             if path:
-                window.sync(runtime.character.feet_position, path)
+                height = cfg.sleep_height if value == "sleeping" else cfg.character_height
+                window.sync_target_height_world(runtime.character.feet_position, path, height)
             computer_window.sync_state(getattr(runtime.computer, "on", False))
         except Exception:
             logger.exception("timer exception")

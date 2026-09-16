@@ -4,10 +4,10 @@ Windows 桌面伴侣：Ogygia 壁纸负责环境，Python/PySide6 + Win32 负责
 
 ## 当前架构与边界
 
-- `src/calypso`：生产代码。包含 physical-pixel 坐标变换、DPI、SpriteWindow、导航、行为/时间系统、ComputerController、FakeAgentBridge 和可选的 WorkerW desktop host。
+- `src/calypso`：生产代码。包含 physical-pixel 坐标变换、DPI、SpriteWindow、导航、行为/时间系统、ComputerController、非阻塞 Hermes active-session registry bridge 和可选的 WorkerW desktop host。
 - `app/`：旧 PyQt6 实现，仅作 reference/迁移材料，不是生产入口。
 - Godot：legacy/reference；旧项目可在 git 历史 `00316a9^` 找到，保留在历史中，不删除、不作为当前运行方式。
-- 第一阶段只使用本地行为和 FakeAgentBridge；没有真实 Hermes、HTTP 轮询、数据库、farming 或环境动画。
+- 默认轮询本机 Hermes 状态；Hermes 未运行或短暂断线时，Calypso 仍继续普通生活。当前不使用数据库、farming 或环境动画。
 
 生产坐标以 2560×1600 canonical physical-pixel world 为基准。当前地图源图为 1312×816，导航数据为 16 px 网格；地图坐标、网格坐标与屏幕 physical pixels 之间统一由坐标变换层处理，Windows per-monitor DPI scaling 不应进入行为逻辑。资源和可复用数据仍在 `assets/`、`data/locations.json`、`data/navigation.json` 及相关配置中。
 
@@ -30,6 +30,12 @@ python -m calypso --desktop
 python -m calypso --fake-task
 python -m calypso --smoke 300
 ```
+
+双击根目录 `Calypso.cmd` 可切换运行状态。它通过 `logs/calypso.pid` 与
+`logs/calypso.stop` 请求优雅退出；应用最多等待后台清理完成，不会盲杀未知进程。
+默认读取 Hermes 自己维护的 `%LOCALAPPDATA%/hermes/runtime/active_sessions.json`
+（并包含 profiles 下的同类注册表）。`data/runtime_config.json` 仍可切换到兼容 HTTP
+provider。F9/F10 继续提供本地调试任务开始/结束。
 
 单元测试：
 
@@ -54,6 +60,9 @@ docs/screenshots/        已有调试截图
 
 `assets/map/map.png` 是当前地图背景，`map_cover.jpg` 是导航色罩。需要重建导航时使用 `tools/build_navigation.py`；不要把 Godot 配置中的旧坐标直接当作生产屏幕坐标。
 
-## 后续集成
+## Hermes 状态绑定
 
-Hermes AgentBridge 只在本地 P0–P7 稳定后接入；届时应替换 bridge 接口而不改动行为、导航、时间和窗口边界。本 README 不声称真实 Hermes 或最终 desktop integration 已完成。
+生产 Runtime 默认监听 Hermes 的跨进程 active-session lease 注册表。出现任一执行中
+session 时，Calypso 会中断普通生活并赶往电脑；抵达后电脑才亮屏。连续两次确认注册表
+为空后，她熄灭电脑并恢复生活。注册表暂时不可读时视为未知状态，不会导致人物来回折返。
+旧版 loopback HTTP provider 仍保留为配置兼容路径。

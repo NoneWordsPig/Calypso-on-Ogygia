@@ -23,11 +23,13 @@ class BehaviorManager:
         self.character.set_path(self.navigation.go_to(name, self.character.position))
 
     def task_started(self, task_id=None, metadata=None):
+        if self.task: return
         self.task, self.character.running = True, True
         self.computer.turn_off()
         self.go_to("computer")
 
     def task_finished(self, task_id=None, result=None):
+        if not self.task: return
         self.task, self.character.running = False, False
         self.computer.turn_off()
         self.go_to("bed" if self.sleep_due or self.time.is_sleep_period() else "spawn")

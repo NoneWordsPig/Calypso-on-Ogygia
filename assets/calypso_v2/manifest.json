@@ -1,0 +1,168 @@
+{
+  "cell_size": [
+    256,
+    256
+  ],
+  "canvas_size": [
+    256,
+    256
+  ],
+  "animations": {
+    "walk_down": {
+      "frames": [
+        "walk_down/00.png",
+        "walk_down/01.png",
+        "walk_down/02.png",
+        "walk_down/03.png"
+      ],
+      "count": 4,
+      "canvas_size": [
+        256,
+        256
+      ],
+      "anchor": [
+        128,
+        240
+      ],
+      "anchor_type": "feet-center"
+    },
+    "idle_down": {
+      "frames": [
+        "idle_down/00.png",
+        "idle_down/01.png"
+      ],
+      "count": 2,
+      "canvas_size": [
+        256,
+        256
+      ],
+      "anchor": [
+        128,
+        240
+      ],
+      "anchor_type": "feet-center"
+    },
+    "walk_left": {
+      "frames": [
+        "walk_left/00.png",
+        "walk_left/01.png",
+        "walk_left/02.png",
+        "walk_left/03.png"
+      ],
+      "count": 4,
+      "canvas_size": [
+        256,
+        256
+      ],
+      "anchor": [
+        128,
+        240
+      ],
+      "anchor_type": "feet-center"
+    },
+    "idle_left": {
+      "frames": [
+        "idle_left/00.png",
+        "idle_left/01.png"
+      ],
+      "count": 2,
+      "canvas_size": [
+        256,
+        256
+      ],
+      "anchor": [
+        128,
+        240
+      ],
+      "anchor_type": "feet-center"
+    },
+    "walk_right": {
+      "frames": [
+        "walk_right/00.png",
+        "walk_right/01.png",
+        "walk_right/02.png",
+        "walk_right/03.png"
+      ],
+      "count": 4,
+      "canvas_size": [
+        256,
+        256
+      ],
+      "anchor": [
+        128,
+        240
+      ],
+      "anchor_type": "feet-center"
+    },
+    "idle_right": {
+      "frames": [
+        "idle_right/00.png",
+        "idle_right/01.png"
+      ],
+      "count": 2,
+      "canvas_size": [
+        256,
+        256
+      ],
+      "anchor": [
+        128,
+        240
+      ],
+      "anchor_type": "feet-center"
+    },
+    "walk_up": {
+      "frames": [
+        "walk_up/00.png",
+        "walk_up/01.png",
+        "walk_up/02.png",
+        "walk_up/03.png"
+      ],
+      "count": 4,
+      "canvas_size": [
+        256,
+        256
+      ],
+      "anchor": [
+        128,
+        240
+      ],
+      "anchor_type": "feet-center"
+    },
+    "idle_up": {
+      "frames": [
+        "idle_up/00.png",
+        "idle_up/01.png"
+      ],
+      "count": 2,
+      "canvas_size": [
+        256,
+        256
+      ],
+      "anchor": [
+        128,
+        240
+      ],
+      "anchor_type": "feet-center"
+    },
+    "work": {
+      "frames": [
+        "../calypso/work/00.png",
+        "../calypso/work/01.png",
+        "../calypso/work/02.png",
+        "../calypso/work/03.png"
+      ],
+      "count": 4,
+      "anchor_type": "feet-center"
+    },
+    "sleep": {
+      "frames": [
+        "../calypso/sleep/00.png",
+        "../calypso/sleep/01.png",
+        "../calypso/sleep/02.png",
+        "../calypso/sleep/03.png"
+      ],
+      "count": 4,
+      "anchor_type": "feet-center"
+    }
+  }
+}

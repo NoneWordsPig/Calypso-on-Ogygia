@@ -33,6 +33,8 @@ python -m calypso --smoke 300
 
 双击根目录 `Calypso.cmd` 可切换运行状态。它通过 `logs/calypso.pid` 与
 `logs/calypso.stop` 请求优雅退出；应用最多等待后台清理完成，不会盲杀未知进程。
+一键脚本使用原生透明工具窗口模式；普通应用会覆盖桌宠，按 `Win+D` 返回桌面即可查看。
+`--desktop` WorkerW 模式仅保留作实验用途，不作为默认启动方式。
 默认读取 Hermes 自己维护的 `%LOCALAPPDATA%/hermes/runtime/active_sessions.json`
 （并包含 profiles 下的同类注册表）。`data/runtime_config.json` 仍可切换到兼容 HTTP
 provider。F9/F10 继续提供本地调试任务开始/结束。

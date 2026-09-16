@@ -35,7 +35,10 @@ if ($p) {
 } else {
   Remove-Item -LiteralPath $stop,$ack,$marker -Force -ErrorAction SilentlyContinue
   $env:PYTHONPATH = Join-Path $root 'src'
-  $started = Start-Process python -ArgumentList '-m calypso --desktop' -WorkingDirectory $root -WindowStyle Hidden -PassThru
+  # Qt translucent windows do not compose reliably after Win32 SetParent into
+  # Explorer's WorkerW. Keep them as native tool windows: normal applications
+  # cover them, while Win+D reveals them with the wallpaper.
+  $started = Start-Process python -ArgumentList '-m calypso' -WorkingDirectory $root -WindowStyle Hidden -PassThru
   $deadline=(Get-Date).AddSeconds(5)
   do {
     Start-Sleep -Milliseconds 200

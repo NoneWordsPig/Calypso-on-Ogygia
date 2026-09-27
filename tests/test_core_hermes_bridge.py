@@ -20,7 +20,7 @@ class HermesBridgeTests(unittest.TestCase):
         self.bridge = HttpAgentBridge(self.manager, "http://127.0.0.1:17787", timeout=.25)
 
     def observe(self, payload):
-        self.bridge._observe(payload)
+        self.bridge._observe(self.bridge.active_ids(payload))
         self.bridge.drain()
 
     def test_aggregate_edges_and_idle_debounce(self):
@@ -38,10 +38,15 @@ class HermesBridgeTests(unittest.TestCase):
         self.observe({"status": "in_progress"})
         self.assertEqual(self.manager.events[0][0], "start")
 
-    def test_malformed_rows_are_safe_idle_samples(self):
+    def test_queued_is_not_an_active_turn(self):
+        self.observe({"status": "queued"})
+        self.assertEqual(self.manager.events, [])
+
+    def test_malformed_rows_preserve_last_known_active_state(self):
+        self.observe({"status": "running"})
         self.observe({"sessions": "not-a-list"})
         self.observe({"sessions": [None, "bad"]})
-        self.assertEqual(self.manager.events, [])
+        self.assertEqual(self.manager.events, [("start", "hermes-0")])
 
 
 if __name__ == "__main__":

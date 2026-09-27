@@ -7,20 +7,23 @@ PROJECT_ROOT = Path(__file__).resolve().parents[2]
 @dataclass
 class Config:
     debug_mode: bool = True
-    time_mode: str = "DEBUG_TIME"
+    time_mode: str = "REAL_TIME"
     time_scale: float = 120.0
     walk_speed: float = 90.0
     run_speed: float = 180.0
     sleep_time: int = 1260
     wake_time: int = 360
-    hermes_provider: str = "registry"
+    hermes_provider: str = "busy"
+    hermes_busy_file: str = "%LOCALAPPDATA%/hermes/runtime/calypso_busy.json"
+    hermes_busy_max_age: float = 8.0
     hermes_registry_root: str = "%LOCALAPPDATA%/hermes"
     hermes_http_url: str = "http://127.0.0.1:17787/api/pet/attention"
     hermes_timeout: float = 2.0
     hermes_poll_seconds: float = 1.0
     character_height: int = 88
     computer_height: int = 48
-    sleep_height: int = 38
+    sleep_height: int = 40
+    fishing_height: int = 150
     sprite_manifest: str = "assets/calypso_v2/manifest.json"
     @classmethod
     def load(cls, path=None):
@@ -33,6 +36,8 @@ class Config:
         # Accept both the flat runtime schema and the nested hermes schema.
         hermes = values.get("hermes", {}) if isinstance(values.get("hermes"), dict) else {}
         values.setdefault("hermes_provider", hermes.get("provider", cls.hermes_provider))
+        values.setdefault("hermes_busy_file", hermes.get("busy_file", cls.hermes_busy_file))
+        values.setdefault("hermes_busy_max_age", hermes.get("busy_max_age", cls.hermes_busy_max_age))
         values.setdefault("hermes_registry_root", hermes.get("registry_root", cls.hermes_registry_root))
         values.setdefault("hermes_http_url", hermes.get("http_url", cls.hermes_http_url))
         values.setdefault("hermes_timeout", hermes.get("timeout", 2.0))

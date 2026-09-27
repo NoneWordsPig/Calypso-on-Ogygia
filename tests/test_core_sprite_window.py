@@ -16,3 +16,14 @@ class SpriteTests(unittest.TestCase):
   w=SpriteWindow(transform=transform,target_height=90)
   w.sync((100,100),'assets/calypso_v2/idle_down/00.png')
   self.assertEqual(w.height(),60)
+ def test_night_sprite_uses_separate_shaded_frame(self):
+  app=QApplication.instance() or QApplication([])
+  w=SpriteWindow(target_height=38)
+  path='assets/calypso/sleep/head_extracted.png'
+  w.sync((100,100),path)
+  day=w._pix.toImage()
+  w.sync((100,100),path,night=True)
+  night=w._pix.toImage()
+  self.assertEqual(w.height(),38)
+  self.assertNotEqual(day,night)
+  self.assertEqual(set(key[2] for key in w._cache),{False,True})

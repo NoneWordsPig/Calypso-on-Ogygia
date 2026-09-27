@@ -1,0 +1,21 @@
+# Calypso action artwork prompts
+
+These source sheets were made with the built-in `imagegen` tool. `tools/process_action_sheets.py` extracts their transparent runtime frames.
+
+## `calypso_fishing_sheet_v1.png`
+
+Reference: `../calypso_v2/idle_left/00.png`.
+
+> Use case: sprite-sheet. Asset type: transparent pixel-art game sprite sheet for the existing Calypso desktop companion. Input image: reference image, exact identity, clothing, palette and pixel-art finish of Calypso. Create FOUR equal square panels in ONE horizontal row, with clean gutters and no overlaps. Same young sea goddess with long deep teal-blue hair, turquoise sleeveless dress and brown sandals, facing LEFT in strict side profile in all four panels. Panels are distinct sequential fishing poses: (1) cast, she lifts a slender dark-brown fishing rod and flicks it toward the left; (2) waiting, rod extends toward the left over water, relaxed still pose; (3) waiting subtle bob, same stance with only rod tip and hair moving a little; (4) pull, she lifts rod sharply and leans back a little. Show full body and both sandals in every panel, feet on a shared baseline. The fishing rod and line fit entirely within each panel. Keep anatomy, face, dress and hair consistent across frames. Genuine transparent alpha background, no checkerboard, no ground, no water, no shadow, no text, no border, no UI, no extra characters. Crisp hand placed pixel art, nearest-neighbor-like edges and discrete color clusters.
+
+## `calypso_sidewalk_sheet_v3.png`
+
+Reference: `calypso_walk_rest_sheet_v2.png`. The lower, right-facing row is used in the final frames.
+
+> Use case: sprite-sheet edit. Asset type: replacement side-walk animation strip for existing Calypso pixel-art desktop companion. Input image is the character identity and style reference, especially the LEFT and RIGHT side-profile rows. Create a transparent sprite sheet: TWO rows and FOUR equal square columns. TOP row: four walking-left frames. BOTTOM row: four walking-right frames. Same young woman, same long dark cyan hair, turquoise dress with dark blue inner skirt, brown sandals, same body scale and profile face in every cell. Critical improvement: distinct readable leg and sandal motion. Four-frame gait per direction: left foot ahead / feet pass / right foot ahead / feet pass, with alternating knees and sandals visible beneath the skirt; dress hem responds to each stride. Arms swing opposite the legs. The feet share one baseline in each cell, head height stays fixed, no body translation. Side profiles look in actual travel direction. Preserve original pixel-art color palette and crisp clustered pixels. Genuine transparent background, no checkerboard, no ground, no shadows, no labels, no extra objects or characters. Wide gutters between cells; entire character fits inside each cell.
+
+## `calypso_walk_left_sheet_v4.png`
+
+References: `../calypso_v2/walk_right/00.png`, `../calypso_v2/walk_right/02.png`, and `../calypso_v2/idle_left/00.png`. This revised strip supplies the final left-facing frames.
+
+> Use case: sprite-sheet edit. Asset type: production pixel-art animation strip. Input images 1 and 2 show the same character's clearly separated SIDE WALKING strides to the right; image 3 shows her LEFT-facing identity. Produce FOUR transparent square panels in ONE horizontal row, all the same character facing LEFT. Exact same deep teal hair, turquoise dress, brown sandals, pixel-art style and proportions. This is specifically to fix legs looking frozen in leftward walk: frame 1 has left/front sandal far forward and rear sandal far behind, frame 2 passing pose with feet almost together, frame 3 opposite stride with the other sandal clearly far forward, frame 4 passing pose with lifted rear heel. Make the lower legs and sandals unambiguously different in silhouette across frames, with alternating exposed shins beneath the skirt. Arm swing opposes leg stride. Keep head position, body size and feet baseline identical. No body translation. Each full character must be isolated within its own panel with ample transparent gutters, no overlap, and no clipping. Genuine transparent alpha background, no checkerboard, no ground, no shadows, no text, no labels.

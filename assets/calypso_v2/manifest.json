@@ -144,24 +144,47 @@
       ],
       "anchor_type": "feet-center"
     },
+    "fish_cast": {
+      "frames": [
+        "fishing/cast/00.png"
+      ],
+      "count": 1,
+      "canvas_size": [384, 320],
+      "anchor": [192, 308],
+      "anchor_type": "feet-center"
+    },
+    "fish_wait": {
+      "frames": [
+        "fishing/wait/00.png",
+        "fishing/wait/01.png"
+      ],
+      "count": 2,
+      "canvas_size": [384, 320],
+      "anchor": [192, 308],
+      "anchor_type": "feet-center"
+    },
+    "fish_pull": {
+      "frames": [
+        "fishing/pull/00.png"
+      ],
+      "count": 1,
+      "canvas_size": [384, 320],
+      "anchor": [192, 308],
+      "anchor_type": "feet-center"
+    },
     "work": {
       "frames": [
         "../calypso/work/00.png",
-        "../calypso/work/01.png",
-        "../calypso/work/02.png",
-        "../calypso/work/03.png"
+        "../calypso/work/01.png"
       ],
-      "count": 4,
+      "count": 2,
       "anchor_type": "feet-center"
     },
     "sleep": {
       "frames": [
-        "../calypso/sleep/00.png",
-        "../calypso/sleep/01.png",
-        "../calypso/sleep/02.png",
-        "../calypso/sleep/03.png"
+        "../calypso/sleep/head_extracted.png"
       ],
-      "count": 4,
+      "count": 1,
       "anchor_type": "feet-center"
     }
   }

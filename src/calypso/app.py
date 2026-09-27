@@ -24,7 +24,41 @@ def main(argv=None):
     modes.add_argument("--debug-overlay", action="store_true")
     modes.add_argument("--desktop", action="store_true")
     parser.add_argument("--fake-task", action="store_true")
+    parser.add_argument("--status", action="store_true", help="show local Hermes and clock status, then exit")
     ns = parser.parse_args(argv)
+    cfg = load_config()
+    if ns.status:
+        from .hermes.http_bridge import HttpAgentBridge
+        from .hermes.registry_bridge import RegistryAgentBridge
+        from .hermes.stream_bridge import StreamAgentBridge
+        from .time.time_manager import TimeManager
+        provider = cfg.hermes_provider.lower()
+        if provider in ("busy", "stream", "auto", "hermes", "real"):
+            bridge = StreamAgentBridge(None, cfg.hermes_busy_file,
+                                       cfg.hermes_poll_seconds, cfg.hermes_busy_max_age)
+            source = str(bridge.path)
+            ids = bridge._read_active_ids()
+            label = "busy turns"
+        elif provider == "http":
+            bridge = HttpAgentBridge(None, cfg.hermes_http_url,
+                                     cfg.hermes_poll_seconds, cfg.hermes_timeout)
+            source = bridge.url
+            ids = bridge._read_active_ids()
+            label = "busy turns"
+        elif provider == "registry":
+            bridge = RegistryAgentBridge(None, cfg.hermes_registry_root)
+            source = str(bridge.root)
+            ids = bridge._read_active_ids()
+            label = "open sessions (legacy)"
+        else:
+            source, ids = "local debug only", []
+            label = "busy turns"
+        clock = TimeManager(mode=cfg.time_mode, sleep_minute=cfg.sleep_time,
+                            wake_minute=cfg.wake_time)
+        count = "unknown" if ids is None else str(len(ids))
+        print(f"Hermes source: {source}; {label}: {count}")
+        print(f"Calypso clock: {clock.format_time()} ({cfg.time_mode}); sleep period: {clock.is_sleep_period()}")
+        return 0
     enable_per_monitor_v2()
     logdir = PROJECT_ROOT / "logs"
     logdir.mkdir(parents=True, exist_ok=True)
@@ -60,11 +94,12 @@ def main(argv=None):
     from .character.sprite_window import SpriteWindow
     from .objects.computer_window import ComputerWindow
     from .desktop.desktop_host import DesktopHost, DesktopHostError
+    from .desktop.wallpaper import WallpaperSwitcher
 
     logger.info("app start")
     app = QApplication([sys.argv[0]])
-    cfg = load_config()
     runtime = Runtime(config=cfg)
+    wallpaper = WallpaperSwitcher() if cfg.time_mode.upper() == "REAL_TIME" else None
     animator = Animator(cfg.sprite_manifest)
     screen = app.primaryScreen()
     geo = screen.geometry()
@@ -76,6 +111,7 @@ def main(argv=None):
     window.show()
     computer_window = ComputerWindow(transform=transform, navigation=runtime.navigation, target_height=cfg.computer_height)
     computer_window.show()
+    window.raise_()
     host = DesktopHost() if ns.desktop else None
     desktop_attach_attempts = 0
 
@@ -118,6 +154,8 @@ def main(argv=None):
     ticks = 0
     cleaned = False
     exit_logged = False
+    wallpaper_period = None
+    wallpaper_retry_at = 0.0
 
     def cleanup():
         nonlocal cleaned, exit_logged
@@ -131,6 +169,8 @@ def main(argv=None):
         if host is not None:
             host.cleanup()
         runtime.close()
+        if wallpaper is not None:
+            wallpaper.close()
         window.close()
         computer_window.close()
         if not exit_logged:
@@ -152,7 +192,7 @@ def main(argv=None):
     window._calypso_shortcuts = shortcuts
 
     def tick():
-        nonlocal last, ticks
+        nonlocal last, ticks, wallpaper_period, wallpaper_retry_at
         now = time.perf_counter()
         dt = min(0.25, now - last)
         last = now
@@ -165,17 +205,22 @@ def main(argv=None):
                     return
                 stop_file.unlink(missing_ok=True)
             runtime.tick(dt)
-            value = getattr(getattr(runtime.behavior, "state", None), "value", "").lower()
-            if value in ("working", "sleeping"):
-                animator.set_state("work" if value == "working" else "sleep")
-            else:
-                animator.select(getattr(runtime.character, "direction", "down"),
-                                bool(getattr(runtime.character, "path", None)))
+            if wallpaper is not None:
+                night = runtime.time.is_sleep_period()
+                if night != wallpaper_period and now >= wallpaper_retry_at:
+                    if wallpaper.sync(night):
+                        wallpaper_period = night
+                    else:
+                        wallpaper_retry_at = now + 30.0
+            animator.set_state(runtime.animation_intent)
             animator.tick(dt, getattr(runtime.character, "running", False))
             path = animator.frame_path()
             if path:
-                height = cfg.sleep_height if value == "sleeping" else cfg.character_height
-                window.sync_target_height_world(runtime.character.feet_position, path, height)
+                height = (cfg.sleep_height if runtime.behavior.state.value == "SLEEPING"
+                          else cfg.fishing_height if runtime.behavior.state.value == "FISHING"
+                          else cfg.character_height)
+                window.sync_target_height_world(runtime.character.feet_position, path, height,
+                                                night=bool(wallpaper_period))
             computer_window.sync_state(getattr(runtime.computer, "on", False))
         except Exception:
             logger.exception("timer exception")

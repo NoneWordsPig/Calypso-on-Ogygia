@@ -9,3 +9,4 @@ logs/*.log
 logs/calypso.pid
 logs/calypso.stop
 logs/calypso.stop.ack
+logs/wallpaper_night.bmp

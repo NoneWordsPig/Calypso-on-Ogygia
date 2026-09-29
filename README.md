@@ -67,7 +67,7 @@ docs/screenshots/        已有调试截图
 
 `assets/map/map_bare.png` 是环境动画启用时的壁纸底图，`assets/map/map.png` 保留为原画参考，`map_cover.jpg` 是导航色罩。需要重建导航时使用 `tools/build_navigation.py`；不要把 Godot 配置中的旧坐标直接当作生产屏幕坐标。
 
-钓鱼与侧向走路精灵采用真正透明的 PNG，源图位于 `assets/source/`，运行时帧位于 `assets/calypso_v2/`。运行 `python tools/process_action_sheets.py` 可从生成的源图重建逐帧素材；`assets/calypso_v2/manifest.json` 中的 `fish_cast`、`fish_wait`、`fish_pull` 与行为阶段对应。钓鱼画面透明画布高度为 245 世界像素，以保持人物原有尺寸并让鱼线抵达水面；位置使用 manifest 中的脚底锚点。睡眠头部使用 `data/locations.json` 的 `visual_anchors.sleep` 枕头锚点，行走仍到 `bed` 交互点。
+钓鱼与侧向走路精灵采用真正透明的 PNG，源图位于 `assets/source/`，运行时帧位于 `assets/calypso_v2/`。运行 `python tools/process_action_sheets.py` 可从生成的源图重建逐帧素材；向右行走使用 `calypso_walk_right_sheet_v5.png` 的八帧、固定躯干轴和 16 fps 播放。`assets/calypso_v2/manifest.json` 中的 `fish_cast`、`fish_wait`、`fish_pull` 与行为阶段对应。钓鱼画面透明画布高度为 245 世界像素，以保持人物原有尺寸并让鱼线抵达水面；位置使用 manifest 中的脚底锚点。睡眠头部使用 `data/locations.json` 的 `visual_anchors.sleep` 枕头锚点，行走仍到 `bed` 交互点。
 钓鱼等待姿势由 `assets/source/calypso_fishing_wait_clean_00.png` 和 `01.png` 两张独立的无鱼线源图生成。鱼线是 `assets/calypso_v2/fishing/line/` 中的独立透明图层，由角色窗口按等待帧合成；抛竿和收竿帧保留各自的动作线条。
 
 ## Hermes 状态绑定

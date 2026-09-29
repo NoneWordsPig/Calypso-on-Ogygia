@@ -81,9 +81,14 @@
         "walk_right/00.png",
         "walk_right/01.png",
         "walk_right/02.png",
-        "walk_right/03.png"
+        "walk_right/03.png",
+        "walk_right/04.png",
+        "walk_right/05.png",
+        "walk_right/06.png",
+        "walk_right/07.png"
       ],
-      "count": 4,
+      "count": 8,
+      "fps": 16,
       "canvas_size": [
         256,
         256

@@ -19,3 +19,11 @@ class AnimatorTests(unittest.TestCase):
   self.assertEqual(Path(animator.overlay_path()).name,'01.png')
   animator.set_state('fish_pull')
   self.assertIsNone(animator.overlay_path())
+ def test_right_walk_uses_eight_frames_at_its_own_rate(self):
+  animator=Animator('assets/calypso_v2/manifest.json')
+  animator.select('right',True)
+  self.assertEqual(animator._entry()['count'],8)
+  animator.tick(1/16)
+  self.assertEqual(animator.frame,1)
+  animator.tick(7/16)
+  self.assertEqual(animator.frame,0)

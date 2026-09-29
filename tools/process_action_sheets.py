@@ -30,27 +30,34 @@ def save_frame(frame: Image.Image, path: Path, size: tuple[int, int],
 
 
 def side_walk() -> None:
-    side_sheet = Image.open(SOURCE / "calypso_sidewalk_sheet_v3.png").convert("RGBA")
     left_sheet = Image.open(SOURCE / "calypso_walk_left_sheet_v4.png").convert("RGBA")
-    if side_sheet.size != (1774, 887) or left_sheet.size != (2172, 724):
+    right_sheet = Image.open(SOURCE / "calypso_walk_right_sheet_v5.png").convert("RGBA")
+    if left_sheet.size != (2172, 724) or right_sheet.size != (1774, 887):
         raise ValueError("Unexpected generated walking sheet size")
-    # Keep each figure inside its own crop. The revised left strip has more
-    # visible alternating leg positions than the first generated left row.
+
     left_x = [(60, 480), (630, 1040), (1120, 1570), (1720, 2100)]
-    right_x = [(70, 350), (510, 810), (950, 1250), (1390, 1700)]
-    cells = ([left_sheet.crop((x0, 0, x1, left_sheet.height)) for x0, x1 in left_x]
-             + [side_sheet.crop((x0, 444, x1, side_sheet.height)) for x0, x1 in right_x])
-    boxes = [cell.getchannel("A").getbbox() for cell in cells]
-    for row, direction in enumerate(("left", "right")):
-        for col in range(4):
-            cell = cells[row * 4 + col]
-            box = boxes[row * 4 + col]
-            crop = cell.crop(box)
-            # Generated poses vary slightly in size. Normalize the full body
-            # height so the head does not bob when the feet stay planted.
-            scale = 232 / crop.height
-            save_frame(crop, DEST / f"walk_{direction}" / f"{col:02d}.png",
-                       (256, 256), scale, crop.width / 2, BASELINE)
+    for index, (x0, x1) in enumerate(left_x):
+        cell = left_sheet.crop((x0, 0, x1, left_sheet.height))
+        crop = cell.crop(cell.getchannel("A").getbbox())
+        save_frame(crop, DEST / "walk_left" / f"{index:02d}.png",
+                   (256, 256), 232 / crop.height, crop.width / 2, BASELINE)
+
+    cell_width = right_sheet.width / 4
+    cell_height = right_sheet.height / 2
+    for index in range(8):
+        column, row = index % 4, index // 4
+        x0, x1 = round(column * cell_width), round((column + 1) * cell_width)
+        y0, y1 = round(row * cell_height), round((row + 1) * cell_height)
+        cell = right_sheet.crop((x0, y0, x1, y1))
+        # Remove faint generated spill before measuring bounds. A fixed source
+        # torso axis keeps the head still while the boots and dress change shape.
+        cell.putalpha(cell.getchannel("A").point(lambda alpha: 255 if alpha >= 100 else 0))
+        box = cell.getchannel("A").getbbox()
+        if box is None:
+            raise ValueError(f"Empty right-walk cell {index}")
+        crop = cell.crop(box)
+        save_frame(crop, DEST / "walk_right" / f"{index:02d}.png",
+                   (256, 256), 232 / 410, 220 - box[0], BASELINE)
 
 
 def fishing() -> None:

@@ -10,6 +10,7 @@ class CalypsoV2AssetTests(unittest.TestCase):
         for name, spec in manifest["animations"].items():
             expected = (1 if name in ("sleep", "fish_cast", "fish_pull")
                         else 2 if name.startswith("idle") or name in ("work", "fish_wait")
+                        else 8 if name == "walk_right"
                         else 4)
             self.assertEqual(spec["count"], expected)
             self.assertEqual(len(spec["frames"]), spec["count"])
@@ -32,12 +33,14 @@ class CalypsoV2AssetTests(unittest.TestCase):
 
         for direction in ("left", "right"):
             widths = []
-            for i in range(4):
+            count = 8 if direction == "right" else 4
+            for i in range(count):
                 image = Image.open(BASE / f"walk_{direction}/{i:02d}.png").convert("RGBA")
                 shoe_x = [x for y in range(190, 245) for x in range(256)
                           if sandal(image.getpixel((x, y)))]
                 widths.append(max(shoe_x) - min(shoe_x))
-            self.assertGreater(max(widths) - min(widths), 25, direction)
+            self.assertGreater(max(widths) - min(widths),
+                               50 if direction == "right" else 25, direction)
 
     def test_fishing_float_projects_into_water(self):
         map_image = Image.open(ROOT / "assets/map/map_bare.png").convert("RGBA")

@@ -20,9 +20,11 @@ class Animator:
         if state != self.state: self.state=state; self.frame=0; self._elapsed=0.0
     def tick(self, dt, running=False):
         self._elapsed += max(0.0,float(dt))*(self.run_factor if running else 1.0)
-        rate = self.idle_fps if self.state.startswith('idle_') else self.sleep_fps if self.state == 'sleep' else self.work_fps if self.state == 'work' else self.fishing_fps if self.state.startswith('fish_') else self.fps
+        entry = self._entry()
+        default_rate = self.idle_fps if self.state.startswith('idle_') else self.sleep_fps if self.state == 'sleep' else self.work_fps if self.state == 'work' else self.fishing_fps if self.state.startswith('fish_') else self.fps
+        rate = float(entry.get('fps', default_rate))
         step=int(self._elapsed*rate)
-        if step: self.frame=(self.frame+step)%max(1,self._entry().get('count',4)); self._elapsed-=step/rate
+        if step: self.frame=(self.frame+step)%max(1,entry.get('count',4)); self._elapsed-=step/rate
         return self.frame
     def frame_path(self):
         frames=self._entry().get('frames',[])

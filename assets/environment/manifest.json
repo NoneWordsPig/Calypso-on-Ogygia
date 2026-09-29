@@ -1,0 +1,115 @@
+{
+  "version": 1,
+  "source": "assets/map/map.png",
+  "source_sha256": "160cd299fcd51c726ae9dbc0c7ce18f5447a4a22d9aab17cc67a28aa08b05833",
+  "source_size": [
+    1312,
+    816
+  ],
+  "effects": [
+    {
+      "name": "west_trees",
+      "rect": [
+        350,
+        40,
+        355,
+        345
+      ],
+      "frames": 12,
+      "step": 2,
+      "day": "day/west_trees.png",
+      "night": "night/west_trees.png"
+    },
+    {
+      "name": "north_trees",
+      "rect": [
+        620,
+        0,
+        325,
+        104
+      ],
+      "frames": 12,
+      "step": 2,
+      "day": "day/north_trees.png",
+      "night": "night/north_trees.png"
+    },
+    {
+      "name": "east_pines",
+      "rect": [
+        940,
+        0,
+        265,
+        214
+      ],
+      "frames": 12,
+      "step": 2,
+      "day": "day/east_pines.png",
+      "night": "night/east_pines.png"
+    },
+    {
+      "name": "bed_tree",
+      "rect": [
+        1020,
+        325,
+        210,
+        205
+      ],
+      "frames": 12,
+      "step": 2,
+      "day": "day/bed_tree.png",
+      "night": "night/bed_tree.png"
+    },
+    {
+      "name": "south_pines",
+      "rect": [
+        780,
+        465,
+        120,
+        215
+      ],
+      "frames": 12,
+      "step": 2,
+      "day": "day/south_pines.png",
+      "night": "night/south_pines.png"
+    },
+    {
+      "name": "upper_fall",
+      "rect": [
+        788,
+        49,
+        82,
+        140
+      ],
+      "frames": 10,
+      "step": 1,
+      "day": "day/upper_fall.png",
+      "night": "night/upper_fall.png"
+    },
+    {
+      "name": "lower_fall",
+      "rect": [
+        991,
+        588,
+        79,
+        133
+      ],
+      "frames": 10,
+      "step": 1,
+      "day": "day/lower_fall.png",
+      "night": "night/lower_fall.png"
+    },
+    {
+      "name": "campfire",
+      "rect": [
+        1046,
+        185,
+        57,
+        68
+      ],
+      "frames": 8,
+      "step": 1,
+      "day": "day/campfire.png",
+      "night": "night/campfire.png"
+    }
+  ]
+}

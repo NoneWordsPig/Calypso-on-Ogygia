@@ -23,7 +23,7 @@ class CalypsoV2AssetTests(unittest.TestCase):
                 bottoms = [image.getchannel("A").getbbox()[3] for image in frames]
                 self.assertEqual(len(set(bottoms)), 1)
                 if name.startswith("fish_"):
-                    self.assertEqual(bottoms[0], 479 if name == "fish_wait" else 308)
+                    self.assertEqual(bottoms[0], 308)
 
     def test_side_walk_sandals_have_a_visible_stride(self):
         def sandal(pixel):
@@ -41,14 +41,28 @@ class CalypsoV2AssetTests(unittest.TestCase):
 
     def test_fishing_float_projects_into_water(self):
         map_image = Image.open(ROOT / "assets/map/map.png").convert("RGBA")
-        wait = Image.open(BASE / "fishing/wait/00.png").convert("RGBA")
-        self.assertGreater(wait.getpixel((49, 475))[3], 0)
+        line = Image.open(BASE / "fishing/line/00.png").convert("RGBA")
+        self.assertGreater(line.getpixel((49, 475))[3], 0)
         scale = (245 * 816 / 1600) / 520  # world height -> source map pixels
         water = (round(455 + (49 - 342) * scale),
                  round(610 + (475 - 308) * scale))
         self.assertEqual(water, (385, 650))
         red, _, blue, _ = map_image.getpixel(water)
         self.assertGreater(blue, red)
+
+    def test_fishing_wait_has_only_the_line_to_the_water(self):
+        manifest = json.loads((BASE / "manifest.json").read_text())
+        self.assertEqual(len(manifest["animations"]["fish_wait"]["overlays"]), 2)
+        for index in range(2):
+            with Image.open(BASE / f"fishing/wait/{index:02d}.png") as source:
+                frame = source.convert("RGBA")
+            with Image.open(BASE / f"fishing/line/{index:02d}.png") as source:
+                line = source.convert("RGBA")
+            for point in ((230, 200), (245, 205), (250, 200)):
+                self.assertEqual(frame.getpixel(point), (0, 0, 0, 0))
+            self.assertEqual(frame.getpixel((49, 475))[3], 0)
+            self.assertGreater(line.getpixel((49, 475))[3], 0)
+            self.assertGreater(frame.getpixel((370, 210))[3], 0)
 
     def test_sleep_head_projects_over_pillow(self):
         head = Image.open(ROOT / "assets/calypso/sleep/head_extracted.png").convert("RGBA")

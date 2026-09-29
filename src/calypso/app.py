@@ -94,6 +94,7 @@ def main(argv=None):
     from .character.sprite_window import SpriteWindow
     from .objects.computer_window import ComputerWindow
     from .desktop.desktop_host import DesktopHost, DesktopHostError
+    from .desktop.environment import EnvironmentAnimator
     from .desktop.wallpaper import WallpaperSwitcher
 
     logger.info("app start")
@@ -106,6 +107,11 @@ def main(argv=None):
     dpr = screen.devicePixelRatio()
     transform = ScreenTransform(actual_primary_physical=(round(geo.width() * dpr),
                                                          round(geo.height() * dpr)), dpi=dpr)
+    environment = (EnvironmentAnimator(transform, parent=app)
+                   if cfg.environment_enabled and wallpaper is not None
+                   and wallpaper.original is not None else None)
+    if environment is not None:
+        environment.set_active(wallpaper.displaying_map())
     window = SpriteWindow(transform=transform, interactive=ns.debug_overlay, target_height=cfg.character_height)
     window.setFocusPolicy(Qt.StrongFocus if ns.debug_overlay else Qt.NoFocus)
     window.show()
@@ -122,7 +128,9 @@ def main(argv=None):
         desktop_attach_attempts += 1
         host.cleanup()
         error = None
-        for child in (window, computer_window):
+        children = list(environment.windows) if environment is not None else []
+        children.extend((window, computer_window))
+        for child in children:
             try:
                 host.attach(int(child.winId()))
             except DesktopHostError as exc:
@@ -156,6 +164,7 @@ def main(argv=None):
     exit_logged = False
     wallpaper_period = None
     wallpaper_retry_at = 0.0
+    environment_check_at = 0.0
 
     def cleanup():
         nonlocal cleaned, exit_logged
@@ -168,6 +177,8 @@ def main(argv=None):
             tray.hide()
         if host is not None:
             host.cleanup()
+        if environment is not None:
+            environment.close()
         runtime.close()
         if wallpaper is not None:
             wallpaper.close()
@@ -192,7 +203,7 @@ def main(argv=None):
     window._calypso_shortcuts = shortcuts
 
     def tick():
-        nonlocal last, ticks, wallpaper_period, wallpaper_retry_at
+        nonlocal last, ticks, wallpaper_period, wallpaper_retry_at, environment_check_at
         now = time.perf_counter()
         dt = min(0.25, now - last)
         last = now
@@ -212,6 +223,11 @@ def main(argv=None):
                         wallpaper_period = night
                     else:
                         wallpaper_retry_at = now + 30.0
+            if environment is not None:
+                environment.set_night(bool(wallpaper_period))
+                if now >= environment_check_at:
+                    environment.set_active(wallpaper.displaying_map())
+                    environment_check_at = now + 5.0
             animator.set_state(runtime.animation_intent)
             animator.tick(dt, getattr(runtime.character, "running", False))
             path = animator.frame_path()
@@ -224,7 +240,8 @@ def main(argv=None):
                           else runtime.character.feet_position)
                 window.sync_target_height_world(
                     anchor, path, height, night=bool(wallpaper_period),
-                    anchor=animator._entry().get("anchor"))
+                    anchor=animator._entry().get("anchor"),
+                    overlay=animator.overlay_path())
             computer_window.sync_state(getattr(runtime.computer, "on", False))
         except Exception:
             logger.exception("timer exception")

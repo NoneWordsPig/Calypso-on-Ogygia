@@ -10,3 +10,12 @@ class AnimatorTests(unittest.TestCase):
   self.a.select('left'); self.assertEqual(self.a.state,'idle_left'); self.assertEqual(self.a._entry().get('count'),4); self.a.set_state('work'); self.assertIn('assets',self.a.frame_path()); self.a.set_state('sleep'); self.assertTrue(Path(self.a.frame_path()).exists())
  def test_timing_and_run(self):
   self.a.select('down',True); self.a.tick(.5); self.assertEqual(self.a.frame,0); self.a.tick(.2); self.assertEqual(self.a.frame,1); self.a.tick(.5,True); self.assertEqual(self.a.frame,0)
+ def test_fishing_wait_selects_matching_line_layer(self):
+  animator=Animator('assets/calypso_v2/manifest.json')
+  animator.set_state('fish_wait')
+  self.assertTrue(Path(animator.overlay_path()).exists())
+  self.assertEqual(Path(animator.overlay_path()).name,'00.png')
+  animator.tick(.5)
+  self.assertEqual(Path(animator.overlay_path()).name,'01.png')
+  animator.set_state('fish_pull')
+  self.assertIsNone(animator.overlay_path())

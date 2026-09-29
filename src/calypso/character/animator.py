@@ -27,3 +27,6 @@ class Animator:
     def frame_path(self):
         frames=self._entry().get('frames',[])
         return str((Path(self.manifest_path).parent / frames[self.frame%len(frames)]).resolve()) if frames else None
+    def overlay_path(self):
+        overlays=self._entry().get('overlays',[])
+        return str((Path(self.manifest_path).parent / overlays[self.frame%len(overlays)]).resolve()) if overlays else None

@@ -34,13 +34,16 @@ class WallpaperSwitcherTests(unittest.TestCase):
         switcher = WallpaperSwitcher(day, night, lambda: current[0],
                                      lambda path: current.__setitem__(0, Path(path)))
 
+        self.assertTrue(switcher.displaying_map())
         self.assertTrue(switcher.sync(True))
         self.assertEqual(current[0], night)
+        self.assertTrue(switcher.displaying_map())
         with Image.open(night) as image:
             self.assertEqual(image.size, (3, 2))
             self.assertNotEqual(image.getpixel((1, 1)), (160, 210, 240))
         switcher.close()
         self.assertEqual(current[0], original)
+        self.assertTrue(switcher.displaying_map())
 
     def test_unrelated_wallpaper_is_left_alone(self):
         day, other, night = self.path("day.png"), self.path("other.png"), self.path("night.bmp")
@@ -48,8 +51,20 @@ class WallpaperSwitcherTests(unittest.TestCase):
         Image.new("RGB", (2, 2), "red").save(other)
         calls = []
         switcher = WallpaperSwitcher(day, night, lambda: other, calls.append)
+        self.assertFalse(switcher.displaying_map())
         self.assertFalse(switcher.sync(True))
         self.assertEqual(calls, [])
+
+    def test_effects_stop_when_managed_wallpaper_is_replaced(self):
+        day, other, night = self.path("day.png"), self.path("other.png"), self.path("night.bmp")
+        Image.new("RGB", (2, 2), "blue").save(day)
+        Image.new("RGB", (2, 2), "red").save(other)
+        current = [day]
+        switcher = WallpaperSwitcher(day, night, lambda: current[0],
+                                     lambda path: current.__setitem__(0, Path(path)))
+        self.assertTrue(switcher.displaying_map())
+        current[0] = other
+        self.assertFalse(switcher.displaying_map())
 
     def test_campfire_light_is_local_and_brighter(self):
         day = Image.new("RGB", (9, 9), (180, 120, 50))

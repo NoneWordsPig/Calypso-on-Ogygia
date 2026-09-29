@@ -158,6 +158,10 @@
         "fishing/wait/00.png",
         "fishing/wait/01.png"
       ],
+      "overlays": [
+        "fishing/line/00.png",
+        "fishing/line/01.png"
+      ],
       "count": 2,
       "canvas_size": [640, 520],
       "anchor": [342, 308],

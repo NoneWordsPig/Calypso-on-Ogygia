@@ -58,26 +58,43 @@ def fishing() -> None:
     if sheet.size != (2172, 724):
         raise ValueError(f"Unexpected fishing sheet size: {sheet.size}")
     cuts = [0, 630, 1120, 1604, 2172]
-    # The long rod changes the artwork's bounds, so align by the character's
-    # body center rather than by the full frame's bounding box.
-    body_centers = [460, 900, 1390, 1900]
-    names = [("cast", 0), ("wait", 0), ("wait", 1), ("pull", 0)]
-    for i, (action, frame_number) in enumerate(names):
+    # Cast and pull keep their original artwork and action-specific curved line.
+    for i, action, body_center in ((0, "cast", 460), (3, "pull", 1900)):
         crop = sheet.crop((cuts[i], 0, cuts[i + 1], sheet.height))
-        path = DEST / "fishing" / action / f"{frame_number:02d}.png"
+        path = DEST / "fishing" / action / "00.png"
         save_frame(crop, path, (384, 320), 0.42,
-                   body_centers[i] - cuts[i], 308)
-        # At the beach interaction point (455, 610), the float belongs near
-        # (385, 650) in the source map. Preserve the character's scale while
-        # giving the line enough transparent canvas to reach that water pixel.
+                   body_center - cuts[i], 308)
         frame = Image.open(path).convert("RGBA")
         canvas = Image.new("RGBA", (640, 520))
-        if action == "wait":
-            draw = ImageDraw.Draw(canvas)
-            draw.line([(249, 145), (49, 475)], fill=(42, 69, 75, 220), width=4)
-            draw.ellipse((46, 472, 52, 478), fill=(112, 187, 191, 240))
         canvas.alpha_composite(frame, (150, 0))
         canvas.save(path, optimize=True)
+
+    # New line-free waiting poses are independent source art. Align their feet
+    # at the same anchor so the only fishing line can be a separate overlay.
+    placements = (((640, 520), (0, 15)), ((438, 356), (106, 26)))
+    for index, (size, position) in enumerate(placements):
+        source = SOURCE / f"calypso_fishing_wait_clean_{index:02d}.png"
+        with Image.open(source) as original:
+            if original.size != (1391, 1131):
+                raise ValueError(f"Unexpected clean fishing pose size: {original.size}")
+            pose = original.convert("RGBA").resize(size, Image.Resampling.NEAREST)
+        # Generated transparent sprite edges use soft alpha; quantize them to
+        # the same crisp transparency as the other pixel-art action frames.
+        pose.putalpha(pose.getchannel("A").point(lambda value: 255 if value >= 100 else 0))
+        canvas = Image.new("RGBA", (640, 520))
+        canvas.alpha_composite(pose, position)
+        path = DEST / "fishing" / "wait" / f"{index:02d}.png"
+        path.parent.mkdir(parents=True, exist_ok=True)
+        canvas.save(path, optimize=True)
+
+        line = Image.new("RGBA", canvas.size)
+        draw = ImageDraw.Draw(line)
+        tip = (249, 154) if index == 0 else (245, 154)
+        draw.line((tip, (49, 475)), fill=(42, 69, 75, 220), width=4)
+        draw.ellipse((46, 472, 52, 478), fill=(112, 187, 191, 240))
+        line_path = DEST / "fishing" / "line" / f"{index:02d}.png"
+        line_path.parent.mkdir(parents=True, exist_ok=True)
+        line.save(line_path, optimize=True)
 
 
 if __name__ == "__main__":

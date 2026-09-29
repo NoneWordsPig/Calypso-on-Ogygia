@@ -35,13 +35,22 @@ try:
             self.setAttribute(Qt.WA_TranslucentBackground)
             apply_native_styles(self, interactive)
 
-        def sync(self, world_pos, frame, night=False, anchor=None):
+        def sync(self, world_pos, frame, night=False, anchor=None, overlay=None):
             logical_h = max(1, round(
                 self.target_height * self.transform.actual_primary_physical[1]
                 / self.transform.world_size[1] / self.transform.dpi))
-            key = (str(frame), logical_h, bool(night))
+            key = (str(frame), logical_h, bool(night), str(overlay) if overlay else None)
             if key not in self._cache:
                 raw = _night_pixmap(key[0]) if night else QPixmap(key[0])
+                if overlay:
+                    line = _night_pixmap(overlay) if night else QPixmap(overlay)
+                    composed = QPixmap(raw.size())
+                    composed.fill(Qt.transparent)
+                    painter = QPainter(composed)
+                    painter.drawPixmap(0, 0, line)
+                    painter.drawPixmap(0, 0, raw)
+                    painter.end()
+                    raw = composed
                 width = round(raw.width() * logical_h / raw.height())
                 quality = (Qt.SmoothTransformation if raw.height() > logical_h * 8
                            else Qt.FastTransformation)
@@ -70,9 +79,9 @@ try:
                 self._key = key
 
         def sync_target_height_world(self, world_pos, frame, target_height,
-                                     night=False, anchor=None):
+                                     night=False, anchor=None, overlay=None):
             self.target_height = int(target_height)
-            self.sync(world_pos, frame, night=night, anchor=anchor)
+            self.sync(world_pos, frame, night=night, anchor=anchor, overlay=overlay)
 
         def paintEvent(self, event):
             if hasattr(self, "_pix"):

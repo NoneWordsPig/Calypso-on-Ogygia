@@ -24,6 +24,7 @@ class Config:
     computer_height: int = 48
     sleep_height: int = 40
     fishing_height: int = 245
+    environment_enabled: bool = True
     sprite_manifest: str = "assets/calypso_v2/manifest.json"
     @classmethod
     def load(cls, path=None):

@@ -43,3 +43,13 @@ class SpriteTests(unittest.TestCase):
   source_feet=transform.world_to_source(transform.logical_to_world(feet))
   self.assertAlmostEqual(source_feet[0],455,delta=1)
   self.assertAlmostEqual(source_feet[1],610,delta=1)
+ def test_fishing_line_is_cached_as_a_separate_layer(self):
+  app=QApplication.instance() or QApplication([])
+  w=SpriteWindow(target_height=520)
+  frame='assets/calypso_v2/fishing/wait/00.png'
+  line='assets/calypso_v2/fishing/line/00.png'
+  w.sync((100,100),frame)
+  self.assertEqual(w._pix.toImage().pixelColor(49,475).alpha(),0)
+  w.sync((100,100),frame,overlay=line)
+  self.assertGreater(w._pix.toImage().pixelColor(49,475).alpha(),0)
+  self.assertEqual(len(w._cache),2)

@@ -42,6 +42,8 @@ python -m calypso --status
 
 昼夜地图由 `src/calypso/desktop/wallpaper.py` 对 `assets/map/map.png` 做固定调色，并给篝火加局部暖光，生成到 `logs/wallpaper_night.bmp`；地形和导航坐标逐像素保持一致。角色在夜间使用同一套调色，避免在暗地图上突兀发亮。睡眠贴图由 `tools/build_sleep_head.py` 从原画提取头像，只叠加在地图自带的枕头和被褥上。21:00 换夜图、06:00 还原，退出时也还原启动前的日间壁纸路径。只有当前壁纸与项目日间地图内容相同时才接管，避免覆盖用户手动选择的其他壁纸。此功能在 `REAL_TIME` 模式下启用。
 
+环境动画的日间和夜间贴图由 `python tools/build_environment.py` 从地图生成，保存在 `assets/environment/`。整片树冠的原画纹理随风轻微形变，瀑布原有水纹向下流动，篝火使用原画火苗；树干、崖壁和窗口边缘仍与壁纸对齐。八个局部透明窗口共用一个计时器，树木 5 fps、水和火 10 fps。只在项目壁纸显示且 `REAL_TIME` 模式下运行；换成其他壁纸时会暂停。可在 `data/runtime_config.json` 将 `environment_enabled` 设为 `false` 关闭。
+
 单元测试：
 
 ```powershell
@@ -66,6 +68,7 @@ docs/screenshots/        已有调试截图
 `assets/map/map.png` 是当前地图背景，`map_cover.jpg` 是导航色罩。需要重建导航时使用 `tools/build_navigation.py`；不要把 Godot 配置中的旧坐标直接当作生产屏幕坐标。
 
 钓鱼与侧向走路精灵采用真正透明的 PNG，源图位于 `assets/source/`，运行时帧位于 `assets/calypso_v2/`。运行 `python tools/process_action_sheets.py` 可从生成的源图重建逐帧素材；`assets/calypso_v2/manifest.json` 中的 `fish_cast`、`fish_wait`、`fish_pull` 与行为阶段对应。钓鱼画面透明画布高度为 245 世界像素，以保持人物原有尺寸并让鱼线抵达水面；位置使用 manifest 中的脚底锚点。睡眠头部使用 `data/locations.json` 的 `visual_anchors.sleep` 枕头锚点，行走仍到 `bed` 交互点。
+钓鱼等待姿势由 `assets/source/calypso_fishing_wait_clean_00.png` 和 `01.png` 两张独立的无鱼线源图生成。鱼线是 `assets/calypso_v2/fishing/line/` 中的独立透明图层，由角色窗口按等待帧合成；抛竿和收竿帧保留各自的动作线条。
 
 ## Hermes 状态绑定
 

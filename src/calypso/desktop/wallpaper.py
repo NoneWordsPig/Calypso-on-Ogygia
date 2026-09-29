@@ -47,10 +47,16 @@ def make_night_map(source=DAY_MAP, destination=NIGHT_MAP):
     destination.parent.mkdir(parents=True, exist_ok=True)
     with Image.open(source) as original:
         day = original.convert("RGB")
-        night = night_grade(day)
-        _light_campfire(day, night)
+        night = night_map_image(day)
         night.save(destination, format="BMP")
     return destination
+
+
+def night_map_image(day):
+    """The exact night pixels used by the wallpaper and environment frames."""
+    night = night_grade(day)
+    _light_campfire(day, night)
+    return night
 
 
 def current_wallpaper():
@@ -123,6 +129,16 @@ class WallpaperSwitcher:
             return True
         except (OSError, ImportError, TypeError) as exc:
             LOGGER.warning("wallpaper switch failed: %s", exc)
+            return False
+
+    def displaying_map(self):
+        """Whether our day or generated night map is still on the desktop."""
+        if self.original is None:
+            return False
+        try:
+            current = Path(self.getter()).resolve()
+            return current in (self.original.resolve(), self.night_map.resolve())
+        except (OSError, ImportError, TypeError):
             return False
 
     def close(self):

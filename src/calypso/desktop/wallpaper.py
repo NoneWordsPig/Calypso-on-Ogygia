@@ -16,9 +16,10 @@ from .lighting import night_grade
 
 
 LOGGER = logging.getLogger(__name__)
-DAY_MAP = PROJECT_ROOT / "assets" / "map" / "map.png"
+DAY_MAP = PROJECT_ROOT / "assets" / "map" / "map_bare.png"
+LEGACY_MAP = PROJECT_ROOT / "assets" / "map" / "map.png"
 NIGHT_MAP = PROJECT_ROOT / "logs" / "wallpaper_night.bmp"
-FIRE_CENTER = (1073, 223)  # Pixel position of the painted flame in map.png.
+FIRE_CENTER = (1073, 223)  # Pixel position of the painted flame in map_bare.png.
 
 
 def _light_campfire(day, night, center=FIRE_CENTER, radius=90):
@@ -94,16 +95,22 @@ class WallpaperSwitcher:
     """Only switch a wallpaper matching this map; preserve the user's path."""
 
     def __init__(self, day_map=DAY_MAP, night_map=NIGHT_MAP,
-                 getter=current_wallpaper, setter=set_wallpaper):
+                 getter=current_wallpaper, setter=set_wallpaper,
+                 legacy_map=LEGACY_MAP):
         self.day_map = Path(day_map)
         self.night_map = Path(night_map)
+        self.legacy_map = Path(legacy_map)
         self.getter = getter
         self.setter = setter
         self.original = None
+        self.legacy_original = None
         try:
             current = self.getter()
             if _same_file_content(current, self.day_map):
                 self.original = Path(current)
+            elif _same_file_content(current, self.legacy_map):
+                self.original = Path(current)
+                self.legacy_original = Path(current)
             elif Path(current).resolve() == self.night_map.resolve():
                 # Recover after an unclean exit, when the generated night map remains.
                 self.original = self.day_map
@@ -118,14 +125,22 @@ class WallpaperSwitcher:
             if night:
                 if current.resolve() == self.night_map.resolve():
                     return True
-                if not _same_file_content(current, self.day_map):
+                if not (_same_file_content(current, self.day_map) or
+                        (self.legacy_original is not None and
+                         _same_file_content(current, self.legacy_original))):
                     return False  # The user selected another wallpaper.
                 make_night_map(self.day_map, self.night_map)
                 self.setter(self.night_map)
                 LOGGER.info("night wallpaper active")
             elif current.resolve() == self.night_map.resolve():
-                self.setter(self.original)
+                self.setter(self.day_map if self.legacy_original else self.original)
                 LOGGER.info("day wallpaper restored")
+            elif self.legacy_original is not None and \
+                    _same_file_content(current, self.legacy_original):
+                self.setter(self.day_map)
+                LOGGER.info("tree-free wallpaper active")
+            elif not _same_file_content(current, self.day_map):
+                return False
             return True
         except (OSError, ImportError, TypeError) as exc:
             LOGGER.warning("wallpaper switch failed: %s", exc)
@@ -137,9 +152,18 @@ class WallpaperSwitcher:
             return False
         try:
             current = Path(self.getter()).resolve()
-            return current in (self.original.resolve(), self.night_map.resolve())
+            day = self.day_map.resolve() if self.legacy_original else self.original.resolve()
+            return current in (day, self.night_map.resolve())
         except (OSError, ImportError, TypeError):
             return False
 
     def close(self):
-        self.sync(False)
+        if self.legacy_original is None:
+            self.sync(False)
+            return
+        try:
+            current = Path(self.getter()).resolve()
+            if current in (self.day_map.resolve(), self.night_map.resolve()):
+                self.setter(self.legacy_original)
+        except (OSError, ImportError, TypeError) as exc:
+            LOGGER.warning("wallpaper restore failed: %s", exc)

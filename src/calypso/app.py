@@ -95,12 +95,14 @@ def main(argv=None):
     from .objects.computer_window import ComputerWindow
     from .desktop.desktop_host import DesktopHost, DesktopHostError
     from .desktop.environment import EnvironmentAnimator
-    from .desktop.wallpaper import WallpaperSwitcher
+    from .desktop.wallpaper import DAY_MAP, LEGACY_MAP, WallpaperSwitcher
 
     logger.info("app start")
     app = QApplication([sys.argv[0]])
     runtime = Runtime(config=cfg)
-    wallpaper = WallpaperSwitcher() if cfg.time_mode.upper() == "REAL_TIME" else None
+    wallpaper = (WallpaperSwitcher(day_map=DAY_MAP if cfg.environment_enabled
+                                   else LEGACY_MAP)
+                 if cfg.time_mode.upper() == "REAL_TIME" else None)
     animator = Animator(cfg.sprite_manifest)
     screen = app.primaryScreen()
     geo = screen.geometry()

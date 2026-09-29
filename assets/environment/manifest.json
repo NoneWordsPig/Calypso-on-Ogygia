@@ -1,7 +1,7 @@
 {
-  "version": 1,
-  "source": "assets/map/map.png",
-  "source_sha256": "160cd299fcd51c726ae9dbc0c7ce18f5447a4a22d9aab17cc67a28aa08b05833",
+  "version": 2,
+  "source": "assets/map/map_bare.png",
+  "source_sha256": "9c1bd7b0adf63edff5cb0940c3896092824c83f2dc638a92e394b0ff66a40b5b",
   "source_size": [
     1312,
     816
@@ -10,10 +10,10 @@
     {
       "name": "west_trees",
       "rect": [
-        350,
-        40,
-        355,
-        345
+        379,
+        53,
+        320,
+        313
       ],
       "frames": 12,
       "step": 2,
@@ -23,10 +23,10 @@
     {
       "name": "north_trees",
       "rect": [
-        620,
+        613,
         0,
-        325,
-        104
+        329,
+        108
       ],
       "frames": 12,
       "step": 2,
@@ -34,25 +34,25 @@
       "night": "night/north_trees.png"
     },
     {
-      "name": "east_pines",
+      "name": "east_trees",
       "rect": [
-        940,
+        917,
         0,
-        265,
-        214
+        294,
+        213
       ],
       "frames": 12,
       "step": 2,
-      "day": "day/east_pines.png",
-      "night": "night/east_pines.png"
+      "day": "day/east_trees.png",
+      "night": "night/east_trees.png"
     },
     {
       "name": "bed_tree",
       "rect": [
-        1020,
-        325,
-        210,
-        205
+        1046,
+        350,
+        156,
+        178
       ],
       "frames": 12,
       "step": 2,
@@ -62,10 +62,10 @@
     {
       "name": "south_pines",
       "rect": [
-        780,
-        465,
-        120,
-        215
+        790,
+        478,
+        101,
+        208
       ],
       "frames": 12,
       "step": 2,
@@ -73,14 +73,27 @@
       "night": "night/south_pines.png"
     },
     {
+      "name": "fruit_tree",
+      "rect": [
+        693,
+        288,
+        102,
+        125
+      ],
+      "frames": 12,
+      "step": 2,
+      "day": "day/fruit_tree.png",
+      "night": "night/fruit_tree.png"
+    },
+    {
       "name": "upper_fall",
       "rect": [
-        788,
-        49,
-        82,
-        140
+        796,
+        60,
+        48,
+        106
       ],
-      "frames": 10,
+      "frames": 8,
       "step": 1,
       "day": "day/upper_fall.png",
       "night": "night/upper_fall.png"
@@ -88,12 +101,12 @@
     {
       "name": "lower_fall",
       "rect": [
-        991,
-        588,
-        79,
-        133
+        1003,
+        606,
+        54,
+        109
       ],
-      "frames": 10,
+      "frames": 8,
       "step": 1,
       "day": "day/lower_fall.png",
       "night": "night/lower_fall.png"
@@ -101,10 +114,10 @@
     {
       "name": "campfire",
       "rect": [
-        1046,
-        185,
-        57,
-        68
+        1045,
+        187,
+        60,
+        66
       ],
       "frames": 8,
       "step": 1,

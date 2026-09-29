@@ -40,7 +40,7 @@ class CalypsoV2AssetTests(unittest.TestCase):
             self.assertGreater(max(widths) - min(widths), 25, direction)
 
     def test_fishing_float_projects_into_water(self):
-        map_image = Image.open(ROOT / "assets/map/map.png").convert("RGBA")
+        map_image = Image.open(ROOT / "assets/map/map_bare.png").convert("RGBA")
         line = Image.open(BASE / "fishing/line/00.png").convert("RGBA")
         self.assertGreater(line.getpixel((49, 475))[3], 0)
         scale = (245 * 816 / 1600) / 520  # world height -> source map pixels
@@ -71,7 +71,7 @@ class CalypsoV2AssetTests(unittest.TestCase):
         face = (round(1074 + (114 - head.width / 2) * scale),
                 round(503 + (80 - head.height) * scale))
         self.assertEqual(face, (1074, 493))
-        pillow = Image.open(ROOT / "assets/map/map.png").convert("RGBA")
+        pillow = Image.open(ROOT / "assets/map/map_bare.png").convert("RGBA")
         red, green, blue, _ = pillow.getpixel((1074, 490))
         self.assertTrue(red > green > blue)
 

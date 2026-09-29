@@ -1,8 +1,7 @@
-"""Bake small day/night animation strips from the painted wallpaper.
+"""Bake independent tree, waterfall and fire sprite strips for both map palettes.
 
-The runtime only selects a frame from each strip.  Tree crowns and falling
-water deform their original painted pixels; cliffs, trunks and tile borders
-stay aligned with the wallpaper.
+The wallpaper is a painted landscape with no trees or falling water. Every
+moving subject is rendered into a transparent strip before the app starts.
 """
 
 from __future__ import annotations
@@ -10,7 +9,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 import hashlib
 import json
-from math import pi, sin, sqrt
+from math import hypot, pi, sin
 from pathlib import Path
 import sys
 
@@ -20,186 +19,223 @@ from PIL import Image
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
+from calypso.desktop.lighting import night_grade  # noqa: E402
 from calypso.desktop.wallpaper import night_map_image  # noqa: E402
 
 
-SOURCE = ROOT / "assets" / "map" / "map.png"
+SOURCE = ROOT / "assets" / "map" / "map_bare.png"
+ART = ROOT / "assets" / "source" / "environment"
 DEST = ROOT / "assets" / "environment"
 TREE_FRAMES = 12
-WATER_FRAMES = 10
+WATER_FRAMES = 8
 FIRE_FRAMES = 8
+PADDING = 12
+FIRE_CENTER = (1073, 223)
 
 
 @dataclass(frozen=True)
-class Crown:
-    x: int
-    y: int
-    rx: int
-    ry: int
-    sway: float
-    phase: float = 0.0
+class Tree:
+    art: int
+    foot_x: int
+    foot_y: int
+    width: int
+    height: int
+    phase: float
+    flip: bool = False
 
 
-TREE_AREAS = (
-    ("west_trees", (350, 40, 355, 345), (
-        Crown(557, 129, 55, 45, 3.0, 0.1),
-        Crown(486, 182, 61, 53, 3.4, 0.5),
-        Crown(452, 256, 65, 59, 3.6, 1.0),
-        Crown(644, 129, 34, 42, 2.6, 1.4),
-        Crown(650, 220, 31, 44, 2.7, 0.8),
+TREE_GROUPS = (
+    ("west_trees", (
+        Tree(0, 561, 205, 116, 140, .1),
+        Tree(1, 481, 291, 125, 157, .7),
+        Tree(2, 452, 354, 122, 153, 1.3),
+        Tree(1, 648, 184, 74, 112, 1.8, True),
+        Tree(0, 650, 299, 74, 115, 2.3),
     )),
-    ("north_trees", (620, 0, 325, 104), (
-        Crown(699, 13, 45, 41, 2.8, 0.3),
-        Crown(786, 15, 51, 45, 3.0, 1.1),
-        Crown(886, 10, 50, 39, 2.8, 1.8),
+    ("north_trees", (
+        Tree(2, 663, 43, 76, 106, .5),
+        Tree(0, 734, 53, 85, 112, 1.2),
+        Tree(1, 785, 96, 94, 127, 2.0),
+        Tree(2, 884, 62, 93, 113, 2.8, True),
     )),
-    ("east_pines", (940, 0, 265, 214), (
-        Crown(986, 54, 26, 50, 2.7, 0.2),
-        Crown(1038, 82, 31, 58, 3.0, 0.9),
-        Crown(1084, 94, 29, 54, 2.8, 1.6),
-        Crown(1128, 111, 28, 57, 2.8, 0.6),
-        Crown(1161, 133, 23, 55, 2.4, 1.2),
+    ("east_trees", (
+        Tree(3, 970, 167, 83, 167, .2),
+        Tree(1, 1018, 162, 91, 126, .8, True),
+        Tree(4, 1065, 155, 82, 145, 1.4),
+        Tree(5, 1126, 179, 79, 137, 2.1),
+        Tree(3, 1165, 201, 68, 119, 2.7, True),
     )),
-    ("bed_tree", (1020, 325, 210, 205), (
-        Crown(1126, 423, 69, 57, 3.7, 0.4),
+    ("bed_tree", (
+        Tree(2, 1124, 516, 132, 154, .4),
     )),
-    ("south_pines", (780, 465, 120, 215), (
-        Crown(839, 545, 32, 54, 2.8, 0.4),
-        Crown(845, 606, 33, 52, 2.9, 1.2),
+    ("south_pines", (
+        Tree(4, 838, 626, 73, 136, .4),
+        Tree(5, 845, 674, 68, 118, 1.6, True),
+    )),
+    ("fruit_tree", (
+        Tree(0, 744, 401, 79, 101, 1.1),
     )),
 )
 
+# The source sheet contains eight fixed-position frames of downward motion.
 WATER_AREAS = (
-    ("upper_fall", (788, 49, 82, 140), (805, 62, 31, 96)),
-    ("lower_fall", (991, 588, 79, 133), (1010, 609, 43, 92)),
+    ("upper_fall", (796, 60, 48, 106)),
+    ("lower_fall", (1003, 606, 54, 109)),
 )
+FIRE_RECT = (1045, 187, 60, 66)
 
 
-def _edge_alpha(width, height, border=6):
-    """Feather only the outside tile edge where the wallpaper shows through."""
-    alpha = Image.new("L", (width, height))
-    pixels = alpha.load()
-    for y in range(height):
-        for x in range(width):
-            distance = min(x, y, width - 1 - x, height - 1 - y)
-            pixels[x, y] = min(255, round(255 * distance / border))
-    return alpha
+def _crop(source, rect):
+    x, y, width, height = rect
+    return source.crop((x, y, x + width, y + height))
 
 
-def _sample_pair(day, night, indices):
-    size = day.size
-    day_pixels = list(day.getdata())
-    night_pixels = list(night.getdata())
-    result = []
-    for source in (day_pixels, night_pixels):
-        frame = Image.new("RGB", size)
-        frame.putdata([source[index] for index in indices])
-        result.append(frame)
-    return result
+def _load_tree_art():
+    with Image.open(ART / "tree_variants.png") as source:
+        sheet = source.convert("RGBA")
+    cell_w, cell_h = sheet.width // 3, sheet.height // 2
+    variants = []
+    for row in range(2):
+        for column in range(3):
+            cell = sheet.crop((column * cell_w, row * cell_h,
+                               (column + 1) * cell_w, (row + 1) * cell_h))
+            alpha = cell.getchannel("A").point(lambda value: value if value >= 45 else 0)
+            bounds = alpha.getbbox()
+            if bounds is None:
+                raise ValueError("Tree source sheet has an empty sprite")
+            cell.putalpha(alpha)
+            variants.append(cell.crop(bounds))
+    return variants
 
 
-def _tree_mapping(rect, crowns, frame):
-    x0, y0, width, height = rect
-    count = width * height
-    shift_x = [0.0] * count
-    shift_y = [0.0] * count
-    angle = 2 * pi * frame / TREE_FRAMES
-    for crown in crowns:
-        # A crown moves as a whole. The displacement fades in the surrounding
-        # air/grass, well beyond its silhouette, and is zero at tile borders.
-        wind = crown.sway * (sin(angle + crown.phase) - sin(crown.phase)) * 0.65
-        if abs(wind) < 1e-9:
-            continue
-        cx, cy = crown.x - x0, crown.y - y0
-        xmin = max(0, int(cx - crown.rx * 1.35))
-        xmax = min(width, int(cx + crown.rx * 1.35) + 1)
-        ymin = max(0, int(cy - crown.ry * 1.35))
-        ymax = min(height, int(cy + crown.ry * 1.35) + 1)
-        for y in range(ymin, ymax):
-            ny = (y - cy) / crown.ry
-            row = y * width
-            for x in range(xmin, xmax):
-                nx = (x - cx) / crown.rx
-                radius = sqrt(nx * nx + ny * ny)
-                if radius >= 1.35:
-                    continue
-                if radius <= 1:
-                    weight = 1.0
-                else:
-                    t = (radius - 1) / .35
-                    weight = 1 - t * t * (3 - 2 * t)
-                shift_x[row + x] += wind * weight
-                shift_y[row + x] += wind * .18 * weight
-    indices = []
-    for y in range(height):
-        row = y * width
-        for x in range(width):
-            index = row + x
-            source_x = max(0, min(width - 1, round(x - shift_x[index])))
-            source_y = max(0, min(height - 1, round(y - shift_y[index])))
-            indices.append(source_y * width + source_x)
-    return indices
+def _tree_rect(trees):
+    left = max(0, min(tree.foot_x - tree.width // 2 - PADDING
+                      for tree in trees))
+    top = max(0, min(tree.foot_y - tree.height - PADDING
+                     for tree in trees))
+    right = min(1312, max(tree.foot_x + tree.width // 2 + PADDING
+                          for tree in trees))
+    bottom = min(816, max(tree.foot_y + PADDING for tree in trees))
+    return left, top, right - left, bottom - top
 
 
-def _tree_frames(day, night, rect, crowns):
-    box = (rect[0], rect[1], rect[0] + rect[2], rect[1] + rect[3])
-    day_crop, night_crop = day.crop(box), night.crop(box)
-    for frame in range(TREE_FRAMES):
-        yield _sample_pair(day_crop, night_crop, _tree_mapping(rect, crowns, frame))
+def _paste_clipped(canvas, sprite, left, top):
+    x0, y0 = max(0, left), max(0, top)
+    x1 = min(canvas.width, left + sprite.width)
+    y1 = min(canvas.height, top + sprite.height)
+    if x1 <= x0 or y1 <= y0:
+        return
+    canvas.alpha_composite(sprite.crop((x0 - left, y0 - top,
+                                        x1 - left, y1 - top)), (x0, y0))
 
 
-def _water_frame(source, rect, core, frame):
-    x0, y0, width, height = rect
-    left, top, water_width, water_height = core
-    image = source.crop((x0, y0, x0 + width, y0 + height)).copy()
-    result = image.load()
-    pixels = source.load()
-    phase = 2 * pi * frame / WATER_FRAMES
-    for y in range(top, top + water_height):
-        vertical = min(1.0, (y - top) / 9, (top + water_height - 1 - y) / 9)
-        for x in range(left, left + water_width):
-            horizontal = min(1.0, (x - left) / 4,
-                             (left + water_width - 1 - x) / 4)
-            opacity = max(0.0, horizontal) * max(0.0, vertical)
-            if opacity == 0:
+def _tree_frame(rect, trees, variants, frame):
+    canvas = Image.new("RGBA", rect[2:], (0, 0, 0, 0))
+    turn = 2 * pi * frame / TREE_FRAMES
+    for tree in sorted(trees, key=lambda item: item.foot_y):
+        sprite = variants[tree.art].resize((tree.width, tree.height),
+                                            Image.Resampling.LANCZOS)
+        if tree.flip:
+            sprite = sprite.transpose(Image.Transpose.FLIP_LEFT_RIGHT)
+        padded = Image.new("RGBA", (tree.width + 2 * PADDING,
+                                    tree.height + 2 * PADDING), (0, 0, 0, 0))
+        padded.alpha_composite(sprite, (PADDING, PADDING))
+        # Rotate the complete tree about its rooted base. The empty ground
+        # beneath the sprite means no old canopy can show through while it sways.
+        angle = 1.25 * (sin(turn + tree.phase) - sin(tree.phase))
+        rotated = padded.rotate(angle, Image.Resampling.BICUBIC,
+                                center=(PADDING + tree.width / 2,
+                                        PADDING + tree.height - 4),
+                                expand=False)
+        left = round(tree.foot_x - tree.width / 2 - PADDING - rect[0])
+        top = tree.foot_y - tree.height - PADDING - rect[1]
+        _paste_clipped(canvas, rotated, left, top)
+    return canvas
+
+
+def _night_tree_frame(day_frame, rect):
+    night = night_grade(day_frame)
+    day_pixels, night_pixels = day_frame.load(), night.load()
+    for y in range(day_frame.height):
+        world_y = rect[1] + y
+        for x in range(day_frame.width):
+            world_x = rect[0] + x
+            distance = hypot(world_x - FIRE_CENTER[0], world_y - FIRE_CENTER[1])
+            if distance >= 90:
                 continue
-            # Traveling ripples deform the painted water itself. No repeating
-            # strip or drawn white streak can introduce a horizontal seam.
-            wave = (3.0 * sin(2 * pi * (y - top) / 26 - phase)
-                    + 1.1 * sin(2 * pi * (y - top) / 13 - 2 * phase))
-            sx = round(x - .8 * sin(2 * pi * (y - top) / 31 - phase) * opacity)
-            moving_y = round(y - wave * opacity)
-            original = pixels[x, y]
-            moving = pixels[sx, moving_y]
-            blend = .9 * opacity
-            result[x - x0, y - y0] = tuple(
-                round(a * (1 - blend) + b * blend)
-                for a, b in zip(original, moving)
-            )
-    return image
+            red, green, blue, alpha = day_pixels[x, y]
+            if alpha == 0:
+                continue
+            weight = .85 * (1 - distance / 90) ** 1.5
+            lit = (min(255, int(red * 1.12 + 35)),
+                   min(255, int(green * .88 + 24)),
+                   min(255, int(blue * .45 + 6)))
+            base = night_pixels[x, y]
+            night_pixels[x, y] = tuple(round(base[i] * (1 - weight)
+                                              + lit[i] * weight)
+                                       for i in range(3)) + (alpha,)
+    return night
 
 
-def _fire_frame(source, frame):
-    rect = (1046, 185, 57, 68)
-    x0, y0, width, height = rect
-    image = source.crop((x0, y0, x0 + width, y0 + height)).copy()
-    output, pixels = image.load(), source.load()
+def _water_art():
+    with Image.open(ART / "waterfall_frames_raw.png") as source:
+        sheet = source.convert("RGBA")
+    cell_w, cell_h = sheet.width // 4, sheet.height // 2
+    frames = []
+    for row in range(2):
+        for column in range(4):
+            cell = sheet.crop((column * cell_w, row * cell_h,
+                               (column + 1) * cell_w, (row + 1) * cell_h))
+            cell = cell.crop((92, 31, 292, 485))
+            alpha = cell.getchannel("A").point(lambda value: value if value >= 35 else 0)
+            cell.putalpha(alpha)
+            frames.append(cell)
+    return frames
+
+
+def _water_frame(art, rect):
+    return art.resize(rect[2:], Image.Resampling.LANCZOS)
+
+
+def _fire_mask(day_crop):
+    # The flame alone animates. Its stone ring and the ground stay on the map.
+    rows = {
+        201: (1073, 1076), 202: (1071, 1078), 203: (1070, 1079),
+        204: (1069, 1081), 205: (1068, 1082), 206: (1068, 1083),
+        207: (1068, 1084), 208: (1069, 1085), 209: (1067, 1085),
+        210: (1066, 1086), 211: (1065, 1087), 212: (1065, 1088),
+        213: (1064, 1088), 214: (1064, 1089), 215: (1064, 1089),
+        216: (1065, 1089), 217: (1065, 1089), 218: (1065, 1089),
+        219: (1066, 1088), 220: (1066, 1088), 221: (1067, 1087),
+        222: (1068, 1086), 223: (1069, 1085), 224: (1070, 1084),
+        225: (1070, 1084), 226: (1071, 1083), 227: (1072, 1082),
+    }
+    x0, y0, width, _ = FIRE_RECT
+    pixels = list(day_crop.getdata())
+    mask = []
+    for y, (left, right) in rows.items():
+        for x in range(left, right + 1):
+            index = (y - y0) * width + x - x0
+            red, green, blue = pixels[index]
+            if red > 105 and red > blue * 1.35 and green > blue * 1.10:
+                mask.append((index, x, y))
+    return mask
+
+
+def _fire_frame(source, mask, frame):
+    width, height = FIRE_RECT[2:]
+    pixels = list(_crop(source, FIRE_RECT).getdata())
+    output = [(0, 0, 0, 0)] * (width * height)
     angle = 2 * pi * frame / FIRE_FRAMES
-    dx, dy = sin(angle) * 1.8, cos(angle) * 1.7
-    for y in range(y0, y0 + height):
-        for x in range(x0, x0 + width):
-            radius = ((x - 1074) / 16) ** 2 + ((y - 219) / 22) ** 2
-            if radius >= 1.45:
-                continue
-            opacity = 1.0 if radius <= .85 else max(0.0, (1.45 - radius) / .6)
-            sx = max(x0, min(x0 + width - 1, round(x - dx * opacity)))
-            sy = max(y0, min(y0 + height - 1, round(y - dy * opacity)))
-            old, moving = pixels[x, y], pixels[sx, sy]
-            brightness = 1 + .12 * sin(angle + .7)
-            output[x - x0, y - y0] = tuple(
-                max(0, min(255, round((a * (1 - opacity) + b * opacity) * brightness)))
-                for a, b in zip(old, moving)
-            )
+    for index, x, y in mask:
+        phase = x * .31 + y * .17
+        flicker = sin(angle + phase) - sin(phase)
+        red, green, blue = pixels[index]
+        output[index] = (min(255, round(red * (1 + .055 * flicker))),
+                         min(255, round(green * (1 + .14 * flicker))),
+                         min(255, round(blue * (1 + .04 * flicker))), 255)
+    image = Image.new("RGBA", (width, height))
+    image.putdata(output)
     return image
 
 
@@ -207,13 +243,10 @@ def _save_strips(name, rect, frames, step):
     frames = list(frames)
     count = len(frames)
     width, height = rect[2:]
-    alpha = _edge_alpha(width, height)
     for palette_index, palette in enumerate(("day", "night")):
         strip = Image.new("RGBA", (width * count, height))
         for index, pair in enumerate(frames):
-            tile = pair[palette_index].convert("RGBA")
-            tile.putalpha(alpha)
-            strip.paste(tile, (index * width, 0))
+            strip.paste(pair[palette_index], (index * width, 0))
         directory = DEST / palette
         directory.mkdir(parents=True, exist_ok=True)
         strip.save(directory / f"{name}.png", optimize=True)
@@ -225,19 +258,26 @@ def build():
     with Image.open(SOURCE) as original:
         day = original.convert("RGB")
     night = night_map_image(day)
+    variants = _load_tree_art()
     effects = []
-    for name, rect, crowns in TREE_AREAS:
-        effects.append(_save_strips(name, rect, _tree_frames(day, night, rect, crowns), 2))
-    for name, rect, core in WATER_AREAS:
-        frames = ((_water_frame(day, rect, core, index),
-                   _water_frame(night, rect, core, index))
-                  for index in range(WATER_FRAMES))
+    for name, trees in TREE_GROUPS:
+        rect = _tree_rect(trees)
+        day_frames = (_tree_frame(rect, trees, variants, index)
+                      for index in range(TREE_FRAMES))
+        frames = ((frame, _night_tree_frame(frame, rect))
+                  for frame in day_frames)
+        effects.append(_save_strips(name, rect, frames, 2))
+    water_frames = _water_art()
+    for name, rect in WATER_AREAS:
+        day_frames = (_water_frame(art, rect) for art in water_frames)
+        frames = ((frame, night_grade(frame)) for frame in day_frames)
         effects.append(_save_strips(name, rect, frames, 1))
-    fire_rect = (1046, 185, 57, 68)
-    effects.append(_save_strips("campfire", fire_rect,
-                                ((_fire_frame(day, index), _fire_frame(night, index))
+    mask = _fire_mask(_crop(day, FIRE_RECT))
+    effects.append(_save_strips("campfire", FIRE_RECT,
+                                ((_fire_frame(day, mask, index),
+                                  _fire_frame(night, mask, index))
                                  for index in range(FIRE_FRAMES)), 1))
-    manifest = {"version": 1, "source": "assets/map/map.png",
+    manifest = {"version": 2, "source": "assets/map/map_bare.png",
                 "source_sha256": hashlib.sha256(SOURCE.read_bytes()).hexdigest(),
                 "source_size": list(day.size), "effects": effects}
     DEST.mkdir(parents=True, exist_ok=True)

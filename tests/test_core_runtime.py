@@ -71,7 +71,12 @@ class RuntimeTests(unittest.TestCase):
   finally:
    path.unlink(missing_ok=True)
  def test_hermes_work_lifecycle_reaches_computer_and_turns_screen_on(self):
-  r=self.runtime(); bridge=RegistryAgentBridge(r.behavior,'unused')
+  class DayClock:
+   def advance(self, dt): pass
+   def is_sleep_period(self): return False
+  r=Runtime(config=Config(hermes_provider='fake'), time=DayClock())
+  self.addCleanup(r.close)
+  bridge=RegistryAgentBridge(r.behavior,'unused')
   bridge._observe(['job']); bridge.drain()
   self.assertTrue(r.behavior.task); self.assertFalse(r.computer.on)
   self.assertEqual(r.behavior.target,'computer_use')

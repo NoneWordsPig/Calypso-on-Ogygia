@@ -45,6 +45,25 @@ class WallpaperSwitcherTests(unittest.TestCase):
         self.assertEqual(current[0], original)
         self.assertTrue(switcher.displaying_map())
 
+    def test_upgrades_legacy_map_only_while_running(self):
+        day = self.path("bare.png")
+        legacy = self.path("legacy.png")
+        night = self.path("night.bmp")
+        Image.new("RGB", (3, 2), "green").save(day)
+        Image.new("RGB", (3, 2), "blue").save(legacy)
+        current = [legacy]
+        switcher = WallpaperSwitcher(
+            day, night, lambda: current[0],
+            lambda path: current.__setitem__(0, Path(path)), legacy_map=legacy)
+        self.assertFalse(switcher.displaying_map())
+        self.assertTrue(switcher.sync(False))
+        self.assertEqual(current[0], day)
+        self.assertTrue(switcher.displaying_map())
+        self.assertTrue(switcher.sync(True))
+        self.assertEqual(current[0], night)
+        switcher.close()
+        self.assertEqual(current[0], legacy)
+
     def test_unrelated_wallpaper_is_left_alone(self):
         day, other, night = self.path("day.png"), self.path("other.png"), self.path("night.bmp")
         Image.new("RGB", (2, 2), "blue").save(day)

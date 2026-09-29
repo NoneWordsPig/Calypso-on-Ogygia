@@ -111,7 +111,7 @@ class TextureWindow(QWidget):
 
 
 class EnvironmentAnimator:
-    """A single 10 Hz timer for eight small, pre-rendered texture strips."""
+    """A single 10 Hz timer for local, pre-rendered sprite strips."""
 
     def __init__(self, transform, map_path=DAY_MAP, asset_root=ASSETS, parent=None):
         self.placement = WallpaperPlacement(transform)

@@ -1,3 +1,4 @@
+import os
 import unittest
 from calypso.desktop.desktop_host import DesktopHost, DesktopHostError
 
@@ -24,6 +25,7 @@ class DesktopHostTests(unittest.TestCase):
         self.assertTrue(host.detach(100)); self.assertEqual(host.user32.parents[100],99)
     def test_setparent_failure(self):
         with self.assertRaises(DesktopHostError): DesktopHost(FakeUser32(True)).attach(100)
+    @unittest.skipIf(os.name == 'nt', 'only applies off Windows')
     def test_non_windows_is_safe(self):
         with self.assertRaises(DesktopHostError): DesktopHost(None).attach(100)
 

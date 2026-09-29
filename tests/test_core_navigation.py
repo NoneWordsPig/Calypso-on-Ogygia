@@ -1,4 +1,5 @@
 import unittest
+import math
 from pathlib import Path
 from calypso.navigation.manager import NavigationManager
 from calypso.desktop.coordinate_mapper import ScreenTransform
@@ -42,6 +43,32 @@ class NavigationCoreTests(unittest.TestCase):
             result = transform.world_to_source(transform.source_to_world(point))
             self.assertAlmostEqual(result[0], point[0])
             self.assertAlmostEqual(result[1], point[1])
+
+    def test_fishing_feet_are_on_walkable_sand_and_sleep_has_pillow_anchor(self):
+        self.assertTrue(self.nav.is_walkable_world(self.nav.point("fishing")))
+        self.assertEqual(self.nav.transform.world_to_source(self.nav.point("fishing")),
+                         (455.0, 610.0))
+        self.assertEqual(self.nav.transform.world_to_source(self.nav.visual_point("sleep")),
+                         (1074.0, 503.0))
+        self.assertEqual(self.nav.transform.world_to_source(self.nav.point("bed")),
+                         (1074.0, 513.0))
+
+    def test_path_has_no_repeated_points_and_ends_at_interaction(self):
+        for source in self.names:
+            for target in self.names:
+                start = self.nav.point(source)
+                path = self.nav.go_to(target, start)
+                self.assertEqual(path[0], start)
+                self.assertEqual(path[-1], self.nav.point(target))
+                self.assertTrue(all(a != b for a, b in zip(path, path[1:])))
+                for a, b in zip(path, path[1:]):
+                    count = max(1, math.ceil(math.dist(a, b) / 4))
+                    for index in range(count + 1):
+                        fraction = index / count
+                        sample = (a[0] + (b[0] - a[0]) * fraction,
+                                  a[1] + (b[1] - a[1]) * fraction)
+                        self.assertTrue(self.nav.is_walkable_world(sample),
+                                        (source, target, sample))
 
 if __name__ == "__main__":
     unittest.main()

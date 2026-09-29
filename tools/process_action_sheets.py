@@ -6,7 +6,7 @@ All resizing here uses nearest-neighbor sampling and keeps a common feet anchor.
 
 from pathlib import Path
 
-from PIL import Image
+from PIL import Image, ImageDraw
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -64,9 +64,20 @@ def fishing() -> None:
     names = [("cast", 0), ("wait", 0), ("wait", 1), ("pull", 0)]
     for i, (action, frame_number) in enumerate(names):
         crop = sheet.crop((cuts[i], 0, cuts[i + 1], sheet.height))
-        save_frame(crop,
-                   DEST / "fishing" / action / f"{frame_number:02d}.png",
-                   (384, 320), 0.42, body_centers[i] - cuts[i], 308)
+        path = DEST / "fishing" / action / f"{frame_number:02d}.png"
+        save_frame(crop, path, (384, 320), 0.42,
+                   body_centers[i] - cuts[i], 308)
+        # At the beach interaction point (455, 610), the float belongs near
+        # (385, 650) in the source map. Preserve the character's scale while
+        # giving the line enough transparent canvas to reach that water pixel.
+        frame = Image.open(path).convert("RGBA")
+        canvas = Image.new("RGBA", (640, 520))
+        if action == "wait":
+            draw = ImageDraw.Draw(canvas)
+            draw.line([(249, 145), (49, 475)], fill=(42, 69, 75, 220), width=4)
+            draw.ellipse((46, 472, 52, 478), fill=(112, 187, 191, 240))
+        canvas.alpha_composite(frame, (150, 0))
+        canvas.save(path, optimize=True)
 
 
 if __name__ == "__main__":

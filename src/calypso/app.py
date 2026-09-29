@@ -219,8 +219,12 @@ def main(argv=None):
                 height = (cfg.sleep_height if runtime.behavior.state.value == "SLEEPING"
                           else cfg.fishing_height if runtime.behavior.state.value == "FISHING"
                           else cfg.character_height)
-                window.sync_target_height_world(runtime.character.feet_position, path, height,
-                                                night=bool(wallpaper_period))
+                anchor = (runtime.navigation.visual_point("sleep")
+                          if runtime.behavior.state.value == "SLEEPING"
+                          else runtime.character.feet_position)
+                window.sync_target_height_world(
+                    anchor, path, height, night=bool(wallpaper_period),
+                    anchor=animator._entry().get("anchor"))
             computer_window.sync_state(getattr(runtime.computer, "on", False))
         except Exception:
             logger.exception("timer exception")

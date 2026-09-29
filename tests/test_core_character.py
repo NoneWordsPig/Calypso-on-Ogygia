@@ -23,5 +23,30 @@ class CharacterCoreTests(unittest.TestCase):
         character.tick(1.0)
         self.assertEqual(character.position, (30.0, 0.0))
 
+    def test_duplicate_waypoints_and_arrival(self):
+        character = CharacterController((0, 0), speed=10)
+        character.set_path([(0, 0), (5, 0), (5, 0), (5, 5)])
+        self.assertEqual(character.path, [(5.0, 0.0), (5.0, 5.0)])
+        self.assertFalse(character.tick(.5))
+        self.assertEqual(character.direction, "right")
+        self.assertTrue(character.tick(.5))
+        self.assertEqual(character.direction, "down")
+        self.assertEqual(character.position, (5.0, 5.0))
+        self.assertEqual(character.path, [])
+
+    def test_delta_time_and_interrupt_replan(self):
+        once = CharacterController((0, 0), speed=10)
+        many = CharacterController((0, 0), speed=10)
+        for character in (once, many):
+            character.set_path([(10, 10)])
+        once.tick(1)
+        for _ in range(10):
+            many.tick(.1)
+        self.assertAlmostEqual(once.position[0], many.position[0])
+        self.assertAlmostEqual(once.position[1], many.position[1])
+        many.set_path([(0, 0)])
+        many.tick(.1)
+        self.assertEqual(many.direction, "left")
+
 if __name__ == "__main__":
     unittest.main()

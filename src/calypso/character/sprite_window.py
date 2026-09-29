@@ -35,7 +35,7 @@ try:
             self.setAttribute(Qt.WA_TranslucentBackground)
             apply_native_styles(self, interactive)
 
-        def sync(self, world_pos, frame, night=False):
+        def sync(self, world_pos, frame, night=False, anchor=None):
             logical_h = max(1, round(
                 self.target_height * self.transform.actual_primary_physical[1]
                 / self.transform.world_size[1] / self.transform.dpi))
@@ -48,13 +48,19 @@ try:
                 pix = raw.scaled(width, logical_h, Qt.IgnoreAspectRatio,
                                  quality)
                 mask = QBitmap.fromImage(pix.toImage().createAlphaMask())
-                self._cache[key] = (pix, mask)
-            self._pix, self._mask = self._cache[key]
+                self._cache[key] = (pix, mask, raw.size())
+            self._pix, self._mask, source_size = self._cache[key]
             if self.size() != self._pix.size():
                 self.resize(self._pix.size())
             point = self.transform.world_to_logical(world_pos)
-            pos = (round(point[0] - self.width() / 2),
-                   round(point[1] - self.height()))
+            raw_size = self._pix.size()
+            if anchor is None:
+                anchor = (raw_size.width() / 2, raw_size.height())
+            else:
+                anchor = (anchor[0] * self.width() / source_size.width(),
+                          anchor[1] * self.height() / source_size.height())
+            pos = (round(point[0] - anchor[0]),
+                   round(point[1] - anchor[1]))
             if pos != self._last_pos:
                 self.move(*pos)
                 self._last_pos = pos
@@ -64,9 +70,9 @@ try:
                 self._key = key
 
         def sync_target_height_world(self, world_pos, frame, target_height,
-                                     night=False):
+                                     night=False, anchor=None):
             self.target_height = int(target_height)
-            self.sync(world_pos, frame, night=night)
+            self.sync(world_pos, frame, night=night, anchor=anchor)
 
         def paintEvent(self, event):
             if hasattr(self, "_pix"):

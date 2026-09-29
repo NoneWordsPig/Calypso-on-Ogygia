@@ -79,7 +79,14 @@ class RuntimeTests(unittest.TestCase):
    r.tick(.1)
    if r.computer.on: break
   self.assertTrue(r.computer.on)
+  self.assertEqual(r.animation_intent,'work')
   self.assertEqual(r.character.position, r.navigation.point('computer_use'))
   self.assertGreater(r.character.position[1], r.navigation.point('computer')[1])
   bridge._observe([]); bridge._observe([]); bridge.drain()
   self.assertFalse(r.behavior.task); self.assertFalse(r.computer.on)
+  self.assertEqual(r.behavior.target,'spawn')
+  for _ in range(300):
+   r.tick(.1)
+   if r.behavior.state == State.IDLE: break
+  self.assertEqual(r.behavior.state,State.IDLE)
+  self.assertTrue(r.animation_intent.startswith('idle_'))

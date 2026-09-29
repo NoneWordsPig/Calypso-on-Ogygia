@@ -27,3 +27,19 @@ class SpriteTests(unittest.TestCase):
   self.assertEqual(w.height(),38)
   self.assertNotEqual(day,night)
   self.assertEqual(set(key[2] for key in w._cache),{False,True})
+ def test_sleep_pillow_anchor_and_fishing_feet_anchor(self):
+  from calypso.navigation.manager import NavigationManager
+  nav=NavigationManager(); transform=ScreenTransform()
+  app=QApplication.instance() or QApplication([])
+  w=SpriteWindow(transform=transform,target_height=40)
+  w.sync(nav.visual_point('sleep'),'assets/calypso/sleep/head_extracted.png')
+  source_top=transform.world_to_source(transform.logical_to_world((w.x(),w.y())))[1]
+  self.assertAlmostEqual(source_top,483,delta=1)
+  self.assertAlmostEqual(transform.world_to_source(transform.logical_to_world(
+      (w.x()+w.width()/2,w.y()+w.height())))[1],503,delta=1)
+  w.sync_target_height_world(nav.point('fishing'),
+      'assets/calypso_v2/fishing/wait/00.png',245,anchor=(342,308))
+  feet=(w.x()+342*w.width()/640,w.y()+308*w.height()/520)
+  source_feet=transform.world_to_source(transform.logical_to_world(feet))
+  self.assertAlmostEqual(source_feet[0],455,delta=1)
+  self.assertAlmostEqual(source_feet[1],610,delta=1)

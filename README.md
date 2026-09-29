@@ -15,7 +15,7 @@ Windows 桌面伴侣：Ogygia 壁纸负责环境，Python/PySide6 + Win32 负责
 
 默认使用电脑本地时间：21:00 至次日 06:00 为睡眠时段。启动时若已是夜间，会立即去床边；06:00 离床。Hermes 有正在处理的回合时优先去电脑，电脑在她抵达操作点后亮起；回合在夜间结束后再回床。思考、执行工具和输出回复都算处理中的回合，单纯打开会话窗口不算。`DEBUG_TIME` 仍可在 `data/runtime_config.json` 中手动启用，用于加速调试。
 
-电脑贴图使用 `computer` 点位，角色工作时使用桌前的 `computer_use` 点位，二者定义于 `data/locations.json`。白天闲逛时 Calypso 会走到 `fishing` 点位，依次抛竿、等待、收竿，单次持续 5–20 秒后离开。Hermes 任务和夜间睡眠会立即打断钓鱼。新增种花等活动时，在 `src/calypso/behavior/states.py` 添加状态及位置/动画配置，并在 `BehaviorManager` 增加进入条件；通用导航与计时不需要复制。
+电脑贴图使用 `computer` 点位，角色工作时使用桌前的 `computer_use` 点位，二者定义于 `data/locations.json`。白天闲逛时 Calypso 会走到沙地上的 `fishing` 点位，依次抛竿、等待、收竿，单次持续 10–20 秒后离开。Hermes 任务和夜间睡眠会立即打断钓鱼。新增种花等活动时，在 `src/calypso/behavior/states.py` 添加状态及位置/动画配置，并在 `BehaviorManager` 增加进入条件；通用导航与计时不需要复制。
 
 快捷键：F9 触发 fake task（打断当前行为、跑向电脑、`computer_on`、进入 WORKING），F10 结束 fake task（`computer_off`、离开电脑、恢复生活循环）。
 
@@ -65,7 +65,7 @@ docs/screenshots/        已有调试截图
 
 `assets/map/map.png` 是当前地图背景，`map_cover.jpg` 是导航色罩。需要重建导航时使用 `tools/build_navigation.py`；不要把 Godot 配置中的旧坐标直接当作生产屏幕坐标。
 
-钓鱼与侧向走路精灵采用真正透明的 PNG，源图位于 `assets/source/`，运行时帧位于 `assets/calypso_v2/`。运行 `python tools/process_action_sheets.py` 可从生成的源图重建逐帧素材；`assets/calypso_v2/manifest.json` 中的 `fish_cast`、`fish_wait`、`fish_pull` 与行为阶段对应。钓鱼画面高度可通过运行配置中的 `fishing_height` 调整，默认 150 世界像素。
+钓鱼与侧向走路精灵采用真正透明的 PNG，源图位于 `assets/source/`，运行时帧位于 `assets/calypso_v2/`。运行 `python tools/process_action_sheets.py` 可从生成的源图重建逐帧素材；`assets/calypso_v2/manifest.json` 中的 `fish_cast`、`fish_wait`、`fish_pull` 与行为阶段对应。钓鱼画面透明画布高度为 245 世界像素，以保持人物原有尺寸并让鱼线抵达水面；位置使用 manifest 中的脚底锚点。睡眠头部使用 `data/locations.json` 的 `visual_anchors.sleep` 枕头锚点，行走仍到 `bed` 交互点。
 
 ## Hermes 状态绑定
 

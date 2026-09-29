@@ -1,4 +1,5 @@
 import unittest
+import random
 
 from calypso.behavior.manager import BehaviorManager
 from calypso.behavior.fishing import FishingAction, FishingPhase
@@ -64,6 +65,20 @@ class BehaviorTests(unittest.TestCase):
         self.assertEqual(self.behavior.state, State.WALKING)
         self.assertEqual(self.behavior.target, "spawn")
 
+    def test_default_fishing_wait_is_long_and_zero_phases_finish(self):
+        action = FishingAction(duration_range=(10.0, 10.0))
+        action.start()
+        self.assertFalse(action.tick(.7))
+        self.assertEqual(action.phase, FishingPhase.WAIT)
+        self.assertFalse(action.tick(7.0))
+        self.assertEqual(action.phase, FishingPhase.WAIT)
+        self.assertFalse(action.tick(1.61))
+        self.assertEqual(action.phase, FishingPhase.PULL)
+        self.assertTrue(action.tick(.7))
+        instant = FishingAction(duration_range=(0, 0), cast_seconds=0, pull_seconds=0)
+        instant.start()
+        self.assertTrue(instant.tick(0))
+
     def test_hermes_task_immediately_interrupts_fishing(self):
         self.behavior.go_to("fishing")
         self.behavior.arrived("fishing")
@@ -122,3 +137,18 @@ class BehaviorTests(unittest.TestCase):
         self.behavior.set_task_active("hermes", False)
         self.assertEqual(self.behavior.target, "bed")
         self.assertFalse(self.computer.on)
+
+    def test_random_roam_only_runs_while_idle(self):
+        from calypso.behavior.scheduler import Scheduler
+        scheduler = Scheduler(rng=random.Random(3), idle_range=(0, 0))
+        behavior = BehaviorManager(self.character, self.computer, self.clock,
+                                   Navigation(), scheduler=scheduler)
+        behavior.tick(.1)
+        self.assertEqual(behavior.state, State.WALKING)
+        self.assertIn(behavior.target, ("fishing", "campfire", "spawn"))
+        behavior.set_task_active("hermes", True)
+        self.assertEqual(behavior.target, "computer_use")
+        behavior.arrived("computer_use")
+        behavior.tick(100)
+        self.assertEqual(behavior.state, State.WORKING)
+        self.assertEqual(behavior.target, "computer_use")

@@ -6,7 +6,14 @@ class CharacterController:
         self.running=False; self.direction="down"; self.path=[]
     @property
     def feet_position(self): return self.position
-    def set_path(self,path): self.path=list(path)
+    def set_path(self,path):
+        self.path=[]
+        previous=self.position
+        for point in path:
+            point=tuple(map(float,point))
+            if hypot(point[0]-previous[0],point[1]-previous[1]) > 1e-6:
+                self.path.append(point)
+                previous=point
     def follow(self,target,dt):
         dx,dy=target[0]-self.position[0],target[1]-self.position[1]; d=hypot(dx,dy)
         if d<1e-6: self.position=tuple(map(float,target)); return True
@@ -16,7 +23,7 @@ class CharacterController:
         self.position=(self.position[0]+dx/d*step,self.position[1]+dy/d*step); return False
     def tick(self,dt):
         remaining = max(0.0, float(dt))
-        while self.path and remaining > 0:
+        while self.path:
             target = self.path[0]
             distance = hypot(target[0] - self.position[0], target[1] - self.position[1])
             speed = self.run_speed if self.running else self.speed
@@ -24,6 +31,8 @@ class CharacterController:
                 self.position = tuple(map(float, target))
                 self.path.pop(0)
                 continue
+            if remaining <= 0:
+                break
             used = distance / speed
             if used <= remaining:
                 self.follow(target, used)

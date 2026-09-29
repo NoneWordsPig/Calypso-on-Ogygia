@@ -11,12 +11,12 @@ class FishingPhase(str, Enum):
 
 
 class FishingAction:
-    def __init__(self, rng=None, duration_range=(5.0, 20.0),
+    def __init__(self, rng=None, duration_range=(10.0, 20.0),
                  cast_seconds=0.7, pull_seconds=0.7):
         self.rng = rng or random.Random()
         self.duration_range = duration_range
-        self.cast_seconds = float(cast_seconds)
-        self.pull_seconds = float(pull_seconds)
+        self.cast_seconds = max(0.0, float(cast_seconds))
+        self.pull_seconds = max(0.0, float(pull_seconds))
         self.cancel()
 
     @property
@@ -24,7 +24,7 @@ class FishingAction:
         return f"fish_{self.phase.value}" if self.phase else None
 
     def start(self):
-        total = self.rng.uniform(*self.duration_range)
+        total = max(0.0, self.rng.uniform(*self.duration_range))
         self.phase = FishingPhase.CAST
         self.remaining = self.cast_seconds
         self.wait_seconds = max(0.0, total - self.cast_seconds - self.pull_seconds)

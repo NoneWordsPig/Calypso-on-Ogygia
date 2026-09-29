@@ -44,6 +44,9 @@ class BehaviorManager:
         self.target = name
         self._state(State.WALKING)
         self.character.set_path(path)
+        if not self.character.path:
+            self.target = None
+            self.arrived(name)
 
     def set_task_active(self, source, active, task_id=None):
         """Keep independent Hermes and local debug requests from cancelling each other."""

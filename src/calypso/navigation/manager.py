@@ -16,6 +16,8 @@ class NavigationManager:
         positions = dict(locations.get("positions", {}))
         if "spawn" in locations: positions["spawn"] = locations["spawn"]
         self.points = {name: self.transform.source_to_world(value) for name, value in positions.items()}
+        self.visual_anchors = {name: self.transform.source_to_world(value)
+                               for name, value in locations.get("visual_anchors", {}).items()}
         for name, value in data.get("poi_cells", {}).items():
             self.points.setdefault(name, self.transform.source_to_world(value.get("world", value)))
         self.poi_cells.update({name: self._source_cell(value) for name, value in positions.items()})
@@ -31,6 +33,8 @@ class NavigationManager:
         if name not in self.points:
             raise KeyError(f"Unknown location: {name}")
         return self.points[name]
+    def visual_point(self, name):
+        return self.visual_anchors[name]
     def _nearest_open(self, cell):
         if self._open(cell):
             return cell
@@ -58,10 +62,27 @@ class NavigationManager:
                 if new < cost.get(nxt, float("inf")):
                     cost[nxt]=new; came[nxt]=current; heapq.heappush(frontier,(new+math.dist(nxt,goal),nxt))
         if goal not in came: raise ValueError(f"No route to {name}")
-        path=[]; cell=goal
-        while cell is not None: path.append(self._world(cell)); cell=came[cell]
-        path.reverse()
-        path[0] = tuple(start)
-        path[-1] = self.points[name]
-        return path
+        cells=[]; cell=goal
+        while cell is not None: cells.append(cell); cell=came[cell]
+        cells.reverse()
+        # The first cell is where the character already stands. Avoid walking
+        # back to its center before taking the first useful step.
+        path = [self._world(cell) for cell in cells[1:]]
+        endpoint = self.points[name]
+        if not path or math.dist(path[-1], endpoint) > 1e-6:
+            path.append(endpoint)
+        # A* can contain long runs of collinear grid centers. Keep only turns.
+        compact = []
+        for point in path:
+            compact.append(point)
+            while len(compact) >= 3:
+                a, b, c = compact[-3:]
+                ab = (b[0]-a[0], b[1]-a[1])
+                bc = (c[0]-b[0], c[1]-b[1])
+                if abs(ab[0]*bc[1]-ab[1]*bc[0]) > 1e-6 or ab[0]*bc[0]+ab[1]*bc[1] < 0:
+                    break
+                compact.pop(-2)
+        if compact and math.dist(tuple(start), compact[0]) <= 1e-6:
+            compact.pop(0)
+        return [tuple(start), *compact]
     go_to_named = go_to

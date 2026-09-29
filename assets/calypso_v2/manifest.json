@@ -149,8 +149,8 @@
         "fishing/cast/00.png"
       ],
       "count": 1,
-      "canvas_size": [384, 320],
-      "anchor": [192, 308],
+      "canvas_size": [640, 520],
+      "anchor": [342, 308],
       "anchor_type": "feet-center"
     },
     "fish_wait": {
@@ -159,8 +159,8 @@
         "fishing/wait/01.png"
       ],
       "count": 2,
-      "canvas_size": [384, 320],
-      "anchor": [192, 308],
+      "canvas_size": [640, 520],
+      "anchor": [342, 308],
       "anchor_type": "feet-center"
     },
     "fish_pull": {
@@ -168,8 +168,8 @@
         "fishing/pull/00.png"
       ],
       "count": 1,
-      "canvas_size": [384, 320],
-      "anchor": [192, 308],
+      "canvas_size": [640, 520],
+      "anchor": [342, 308],
       "anchor_type": "feet-center"
     },
     "work": {
